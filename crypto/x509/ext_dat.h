@@ -29,3 +29,4 @@ extern const X509V3_EXT_METHOD ossl_v3_group_ac;
 extern const X509V3_EXT_METHOD ossl_v3_soa_identifier;
 extern const X509V3_EXT_METHOD ossl_v3_no_assertion;
 extern const X509V3_EXT_METHOD ossl_v3_no_rev_avail;
+extern const X509V3_EXT_METHOD ossl_v3_single_use;
