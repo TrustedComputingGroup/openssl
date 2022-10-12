@@ -10,6 +10,7 @@
 #include <openssl/evp.h>
 #include <openssl/core_names.h>
 #include <openssl/rand.h>
+#include <openssl/ssl.h>
 #include "../../ssl_local.h"
 #include "../record_local.h"
 #include "recmethod_local.h"
@@ -22,16 +23,17 @@ static int tls1_set_crypto_state(OSSL_RECORD_LAYER *rl, int level,
                                  size_t taglen,
                                  int mactype,
                                  const EVP_MD *md,
-                                 const SSL_COMP *comp)
+                                 COMP_METHOD *comp)
 {
     EVP_CIPHER_CTX *ciph_ctx;
     EVP_PKEY *mac_key;
+    int enc = (rl->direction == OSSL_RECORD_DIRECTION_WRITE) ? 1 : 0;
 
     if (level != OSSL_RECORD_PROTECTION_LEVEL_APPLICATION)
         return OSSL_RECORD_RETURN_FATAL;
 
     if ((rl->enc_ctx = EVP_CIPHER_CTX_new()) == NULL) {
-        RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, ERR_R_MALLOC_FAILURE);
+        RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, ERR_R_EVP_LIB);
         return OSSL_RECORD_RETURN_FATAL;
     }
 
@@ -44,8 +46,8 @@ static int tls1_set_crypto_state(OSSL_RECORD_LAYER *rl, int level,
     }
 #ifndef OPENSSL_NO_COMP
     if (comp != NULL) {
-        rl->expand = COMP_CTX_new(comp->method);
-        if (rl->expand == NULL) {
+        rl->compctx = COMP_CTX_new(comp);
+        if (rl->compctx == NULL) {
             ERR_raise(ERR_LIB_SSL, SSL_R_COMPRESSION_LIBRARY_ERROR);
             return OSSL_RECORD_RETURN_FATAL;
         }
@@ -82,26 +84,26 @@ static int tls1_set_crypto_state(OSSL_RECORD_LAYER *rl, int level,
     }
 
     if (EVP_CIPHER_get_mode(ciph) == EVP_CIPH_GCM_MODE) {
-        if (!EVP_DecryptInit_ex(ciph_ctx, ciph, NULL, key, NULL)
+        if (!EVP_CipherInit_ex(ciph_ctx, ciph, NULL, key, NULL, enc)
                 || EVP_CIPHER_CTX_ctrl(ciph_ctx, EVP_CTRL_GCM_SET_IV_FIXED,
                                        (int)ivlen, iv) <= 0) {
             ERR_raise(ERR_LIB_SSL, ERR_R_INTERNAL_ERROR);
             return OSSL_RECORD_RETURN_FATAL;
         }
     } else if (EVP_CIPHER_get_mode(ciph) == EVP_CIPH_CCM_MODE) {
-        if (!EVP_DecryptInit_ex(ciph_ctx, ciph, NULL, NULL, NULL)
+        if (!EVP_CipherInit_ex(ciph_ctx, ciph, NULL, NULL, NULL, enc)
                 || EVP_CIPHER_CTX_ctrl(ciph_ctx, EVP_CTRL_AEAD_SET_IVLEN, 12,
                                        NULL) <= 0
                 || EVP_CIPHER_CTX_ctrl(ciph_ctx, EVP_CTRL_AEAD_SET_TAG,
                                        (int)taglen, NULL) <= 0
                 || EVP_CIPHER_CTX_ctrl(ciph_ctx, EVP_CTRL_CCM_SET_IV_FIXED,
                                        (int)ivlen, iv) <= 0
-                || !EVP_DecryptInit_ex(ciph_ctx, NULL, NULL, key, NULL)) {
+                || !EVP_CipherInit_ex(ciph_ctx, NULL, NULL, key, NULL, enc)) {
             ERR_raise(ERR_LIB_SSL, ERR_R_INTERNAL_ERROR);
             return OSSL_RECORD_RETURN_FATAL;
         }
     } else {
-        if (!EVP_DecryptInit_ex(ciph_ctx, ciph, NULL, key, iv)) {
+        if (!EVP_CipherInit_ex(ciph_ctx, ciph, NULL, key, iv, enc)) {
             ERR_raise(ERR_LIB_SSL, ERR_R_INTERNAL_ERROR);
             return OSSL_RECORD_RETURN_FATAL;
         }
@@ -117,6 +119,28 @@ static int tls1_set_crypto_state(OSSL_RECORD_LAYER *rl, int level,
     if (EVP_CIPHER_get0_provider(ciph) != NULL
             && !ossl_set_tls_provider_parameters(rl, ciph_ctx, ciph, md))
         return OSSL_RECORD_RETURN_FATAL;
+
+    /* Calculate the explict IV length */
+    if (RLAYER_USE_EXPLICIT_IV(rl)) {
+        int mode = EVP_CIPHER_CTX_get_mode(ciph_ctx);
+        int eivlen = 0;
+
+        if (mode == EVP_CIPH_CBC_MODE) {
+            eivlen = EVP_CIPHER_CTX_get_iv_length(ciph_ctx);
+            if (eivlen < 0) {
+                RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, SSL_R_LIBRARY_BUG);
+                return OSSL_RECORD_RETURN_FATAL;
+            }
+            if (eivlen <= 1)
+                eivlen = 0;
+        } else if (mode == EVP_CIPH_GCM_MODE) {
+            /* Need explicit part of IV for GCM mode */
+            eivlen = EVP_GCM_TLS_EXPLICIT_IV_LEN;
+        } else if (mode == EVP_CIPH_CCM_MODE) {
+            eivlen = EVP_CCM_TLS_EXPLICIT_IV_LEN;
+        }
+        rl->eivlen = (size_t)eivlen;
+    }
 
     return OSSL_RECORD_RETURN_SUCCESS;
 }
@@ -519,6 +543,104 @@ static int tls1_mac(OSSL_RECORD_LAYER *rl, SSL3_RECORD *rec, unsigned char *md,
     return ret;
 }
 
+#if defined(SSL3_ALIGN_PAYLOAD) && SSL3_ALIGN_PAYLOAD != 0
+# ifndef OPENSSL_NO_COMP
+#  define MAX_PREFIX_LEN ((SSL3_ALIGN_PAYLOAD - 1) \
+                           + SSL3_RT_SEND_MAX_ENCRYPTED_OVERHEAD \
+                           + SSL3_RT_HEADER_LENGTH \
+                           + SSL3_RT_MAX_COMPRESSED_OVERHEAD)
+# else
+#  define MAX_PREFIX_LEN ((SSL3_ALIGN_PAYLOAD - 1) \
+                           + SSL3_RT_SEND_MAX_ENCRYPTED_OVERHEAD \
+                           + SSL3_RT_HEADER_LENGTH)
+# endif /* OPENSSL_NO_COMP */
+#else
+# ifndef OPENSSL_NO_COMP
+#  define MAX_PREFIX_LEN (SSL3_RT_SEND_MAX_ENCRYPTED_OVERHEAD \
+                           + SSL3_RT_HEADER_LENGTH \
+                           + SSL3_RT_MAX_COMPRESSED_OVERHEAD)
+# else
+#  define MAX_PREFIX_LEN (SSL3_RT_SEND_MAX_ENCRYPTED_OVERHEAD \
+                           + SSL3_RT_HEADER_LENGTH)
+# endif /* OPENSSL_NO_COMP */
+#endif
+
+/* This function is also used by the SSLv3 implementation */
+int tls1_allocate_write_buffers(OSSL_RECORD_LAYER *rl,
+                                OSSL_RECORD_TEMPLATE *templates,
+                                size_t numtempl, size_t *prefix)
+{
+    /* Do we need to add an empty record prefix? */
+    *prefix = rl->need_empty_fragments
+              && templates[0].type == SSL3_RT_APPLICATION_DATA;
+
+    /*
+     * In the prefix case we can allocate a much smaller buffer. Otherwise we
+     * just allocate the default buffer size
+     */
+    if (!tls_setup_write_buffer(rl, numtempl + *prefix,
+                                *prefix ? MAX_PREFIX_LEN : 0, 0)) {
+        /* RLAYERfatal() already called */
+        return 0;
+    }
+
+    return 1;
+}
+
+/* This function is also used by the SSLv3 implementation */
+int tls1_initialise_write_packets(OSSL_RECORD_LAYER *rl,
+                                  OSSL_RECORD_TEMPLATE *templates,
+                                  size_t numtempl,
+                                  OSSL_RECORD_TEMPLATE *prefixtempl,
+                                  WPACKET *pkt,
+                                  SSL3_BUFFER *bufs,
+                                  size_t *wpinited)
+{
+    size_t align = 0;
+    SSL3_BUFFER *wb;
+    size_t prefix;
+
+    /* Do we need to add an empty record prefix? */
+    prefix = rl->need_empty_fragments
+             && templates[0].type == SSL3_RT_APPLICATION_DATA;
+
+    if (prefix) {
+        /*
+         * countermeasure against known-IV weakness in CBC ciphersuites (see
+         * http://www.openssl.org/~bodo/tls-cbc.txt)
+         */
+        prefixtempl->buf = NULL;
+        prefixtempl->version = templates[0].version;
+        prefixtempl->buflen = 0;
+        prefixtempl->type = SSL3_RT_APPLICATION_DATA;
+
+        wb = &bufs[0];
+
+#if defined(SSL3_ALIGN_PAYLOAD) && SSL3_ALIGN_PAYLOAD != 0
+        align = (size_t)SSL3_BUFFER_get_buf(wb) + SSL3_RT_HEADER_LENGTH;
+        align = SSL3_ALIGN_PAYLOAD - 1
+                - ((align - 1) % SSL3_ALIGN_PAYLOAD);
+#endif
+        SSL3_BUFFER_set_offset(wb, align);
+
+        if (!WPACKET_init_static_len(&pkt[0], SSL3_BUFFER_get_buf(wb),
+                                     SSL3_BUFFER_get_len(wb), 0)) {
+            RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
+            return 0;
+        }
+        *wpinited = 1;
+        if (!WPACKET_allocate_bytes(&pkt[0], align, NULL)) {
+            RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
+            return 0;
+        }
+    }
+
+    return tls_initialise_write_packets_default(rl, templates, numtempl,
+                                                NULL,
+                                                pkt + prefix, bufs + prefix,
+                                                wpinited);
+}
+
 /* TLSv1.0, TLSv1.1 and TLSv1.2 all use the same funcs */
 struct record_functions_st tls_1_funcs = {
     tls1_set_crypto_state,
@@ -530,7 +652,15 @@ struct record_functions_st tls_1_funcs = {
     tls_default_validate_record_header,
     tls_default_post_process_record,
     tls_get_max_records_multiblock,
-    tls_write_records_multiblock /* Defined in tls_multib.c */
+    tls_write_records_multiblock, /* Defined in tls_multib.c */
+    tls1_allocate_write_buffers,
+    tls1_initialise_write_packets,
+    NULL,
+    tls_prepare_record_header_default,
+    NULL,
+    tls_prepare_for_encryption_default,
+    tls_post_encryption_processing_default,
+    NULL
 };
 
 struct record_functions_st dtls_1_funcs = {
@@ -540,6 +670,13 @@ struct record_functions_st dtls_1_funcs = {
     tls_default_set_protocol_version,
     tls_default_read_n,
     dtls_get_more_records,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
     NULL,
     NULL,
     NULL,

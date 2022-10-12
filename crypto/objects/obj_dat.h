@@ -10,7 +10,7 @@
  */
 
 /* Serialized OID's */
-static const unsigned char so[8399] = {
+static const unsigned char so[8356] = {
     0x2A,0x86,0x48,0x86,0xF7,0x0D,                 /* [    0] OBJ_rsadsi */
     0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,            /* [    6] OBJ_pkcs */
     0x2A,0x86,0x48,0x86,0xF7,0x0D,0x02,0x02,       /* [   13] OBJ_md2 */
@@ -1151,27 +1151,10 @@ static const unsigned char so[8399] = {
     0x2A,0x81,0x1C,0xCF,0x55,0x01,0x83,0x11,0x03,0x01,  /* [ 8315] OBJ_hmacWithSM3 */
     0x60,0x86,0x48,0x01,0x86,0xF9,0x66,            /* [ 8325] OBJ_oracle */
     0x60,0x86,0x48,0x01,0x86,0xF9,0x66,0xAD,0xCA,0x7B,0x01,0x01,  /* [ 8332] OBJ_oracle_jdk_trustedkeyusage */
-    0x55,0x1D,0x26,                                /* [ 8344] OBJ_authority_attribute_identifier */
-    0x55,0x1D,0x27,                                /* [ 8347] OBJ_role_spec_cert_identifier */
-    0x55,0x1D,0x29,                                /* [ 8350] OBJ_basic_att_constraints */
-    0x55,0x1D,0x2A,                                /* [ 8353] OBJ_delegated_name_constraints */
-    0x55,0x1D,0x2B,                                /* [ 8356] OBJ_time_specification */
-    0x55,0x1D,0x30,                                /* [ 8359] OBJ_attribute_descriptor */
-    0x55,0x1D,0x31,                                /* [ 8362] OBJ_user_notice */
-    0x55,0x1D,0x32,                                /* [ 8365] OBJ_soa_identifier */
-    0x55,0x1D,0x34,                                /* [ 8368] OBJ_acceptable_cert_policies */
-    0x55,0x1D,0x39,                                /* [ 8371] OBJ_acceptable_privilege_policies */
-    0x55,0x1D,0x3D,                                /* [ 8374] OBJ_indirect_issuer */
-    0x55,0x1D,0x3E,                                /* [ 8377] OBJ_no_assertion */
-    0x55,0x1D,0x40,                                /* [ 8380] OBJ_issued_on_behalf_of */
-    0x55,0x1D,0x41,                                /* [ 8383] OBJ_single_use */
-    0x55,0x1D,0x42,                                /* [ 8386] OBJ_group_ac */
-    0x55,0x1D,0x43,                                /* [ 8389] OBJ_allowed_attribute_assignments */
-    0x55,0x1D,0x44,                                /* [ 8392] OBJ_attribute_mappings */
-    0x55,0x1D,0x45,                                /* [ 8395] OBJ_holder_name_constraints */
+    0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x09,0x10,0x01,0x32,  /* [ 8344] OBJ_id_ct_signedTAL */
 };
 
-#define NUM_NID 1302
+#define NUM_NID 1288
 static const ASN1_OBJECT nid_objs[NUM_NID] = {
     {"UNDEF", "undefined", NID_undef},
     {"rsadsi", "RSA Data Security, Inc.", NID_rsadsi, 6, &so[0]},
@@ -2457,27 +2440,13 @@ static const ASN1_OBJECT nid_objs[NUM_NID] = {
     {"hmacWithSM3", "hmacWithSM3", NID_hmacWithSM3, 10, &so[8315]},
     {"oracle-organization", "Oracle organization", NID_oracle, 7, &so[8325]},
     {"oracle-jdk-trustedkeyusage", "Trusted key usage (Oracle)", NID_oracle_jdk_trustedkeyusage, 12, &so[8332]},
-    {"authorityAttributeIdentifier", "X509v3 Authority Attribute Identifier", NID_authority_attribute_identifier, 3, &so[8344]},
-    {"roleSpecCertIdentifier", "X509v3 Role Specification Certificate Identifier", NID_role_spec_cert_identifier, 3, &so[8347]},
-    {"basicAttConstraints", "X509v3 Basic Attribute Certificate Constraints", NID_basic_att_constraints, 3, &so[8350]},
-    {"delegatedNameConstraints", "X509v3 Delegated Name Constraints", NID_delegated_name_constraints, 3, &so[8353]},
-    {"timeSpecification", "X509v3 Time Specification", NID_time_specification, 3, &so[8356]},
-    {"attributeDescriptor", "X509v3 Attribute Descriptor", NID_attribute_descriptor, 3, &so[8359]},
-    {"userNotice", "X509v3 User Notice", NID_user_notice, 3, &so[8362]},
-    {"sOAIdentifier", "X509v3 Source of Authority Identifier", NID_soa_identifier, 3, &so[8365]},
-    {"acceptableCertPolicies", "X509v3 Acceptable Certification Policies", NID_acceptable_cert_policies, 3, &so[8368]},
-    {"acceptablePrivPolicies", "X509v3 Acceptable Privilege Policies", NID_acceptable_privilege_policies, 3, &so[8371]},
-    {"indirectIssuer", "X509v3 Indirect Issuer", NID_indirect_issuer, 3, &so[8374]},
-    {"noAssertion", "X509v3 No Assertion", NID_no_assertion, 3, &so[8377]},
-    {"issuedOnBehalfOf", "X509v3 Issued On Behalf Of", NID_issued_on_behalf_of, 3, &so[8380]},
-    {"singleUse", "X509v3 Single Use", NID_single_use, 3, &so[8383]},
-    {"groupAC", "X509v3 Group Attribute Certificate", NID_group_ac, 3, &so[8386]},
-    {"allowedAttributeAssignments", "X509v3 Allowed Attribute Assignments", NID_allowed_attribute_assignments, 3, &so[8389]},
-    {"attributeMappings", "X509v3 Attribute Mappings", NID_attribute_mappings, 3, &so[8392]},
-    {"holderNameConstraints", "X509v3 Holder Name Constraints", NID_holder_name_constraints, 3, &so[8395]},
+    {"id-ct-signedTAL", "id-ct-signedTAL", NID_id_ct_signedTAL, 11, &so[8344]},
+    {"brainpoolP256r1tls13", "brainpoolP256r1tls13", NID_brainpoolP256r1tls13},
+    {"brainpoolP384r1tls13", "brainpoolP384r1tls13", NID_brainpoolP384r1tls13},
+    {"brainpoolP512r1tls13", "brainpoolP512r1tls13", NID_brainpoolP512r1tls13},
 };
 
-#define NUM_SN 1293
+#define NUM_SN 1279
 static const unsigned int sn_objs[NUM_SN] = {
      364,    /* "AD_DVCS" */
      419,    /* "AES-128-CBC" */
@@ -2822,12 +2791,15 @@ static const unsigned int sn_objs[NUM_SN] = {
      925,    /* "brainpoolP224r1" */
      926,    /* "brainpoolP224t1" */
      927,    /* "brainpoolP256r1" */
+    1285,    /* "brainpoolP256r1tls13" */
      928,    /* "brainpoolP256t1" */
      929,    /* "brainpoolP320r1" */
      930,    /* "brainpoolP320t1" */
      931,    /* "brainpoolP384r1" */
+    1286,    /* "brainpoolP384r1tls13" */
      932,    /* "brainpoolP384t1" */
      933,    /* "brainpoolP512r1" */
+    1287,    /* "brainpoolP512r1tls13" */
      934,    /* "brainpoolP512t1" */
      494,    /* "buildingName" */
      860,    /* "businessCategory" */
@@ -3127,6 +3099,7 @@ static const unsigned int sn_objs[NUM_SN] = {
     1236,    /* "id-ct-rpkiGhostbusters" */
     1235,    /* "id-ct-rpkiManifest" */
     1247,    /* "id-ct-signedChecklist" */
+    1284,    /* "id-ct-signedTAL" */
     1060,    /* "id-ct-xml" */
     1108,    /* "id-dsa-with-sha3-224" */
     1109,    /* "id-dsa-with-sha3-256" */
@@ -3774,7 +3747,7 @@ static const unsigned int sn_objs[NUM_SN] = {
     1093,    /* "x509ExtAdmission" */
 };
 
-#define NUM_LN 1293
+#define NUM_LN 1279
 static const unsigned int ln_objs[NUM_LN] = {
      363,    /* "AD Time Stamping" */
      405,    /* "ANSI X9.62" */
@@ -4126,12 +4099,15 @@ static const unsigned int ln_objs[NUM_LN] = {
      925,    /* "brainpoolP224r1" */
      926,    /* "brainpoolP224t1" */
      927,    /* "brainpoolP256r1" */
+    1285,    /* "brainpoolP256r1tls13" */
      928,    /* "brainpoolP256t1" */
      929,    /* "brainpoolP320r1" */
      930,    /* "brainpoolP320t1" */
      931,    /* "brainpoolP384r1" */
+    1286,    /* "brainpoolP384r1tls13" */
      932,    /* "brainpoolP384t1" */
      933,    /* "brainpoolP512r1" */
+    1287,    /* "brainpoolP512r1tls13" */
      934,    /* "brainpoolP512t1" */
      494,    /* "buildingName" */
      860,    /* "businessCategory" */
@@ -4450,6 +4426,7 @@ static const unsigned int ln_objs[NUM_LN] = {
     1236,    /* "id-ct-rpkiGhostbusters" */
     1235,    /* "id-ct-rpkiManifest" */
     1247,    /* "id-ct-signedChecklist" */
+    1284,    /* "id-ct-signedTAL" */
     1060,    /* "id-ct-xml" */
      408,    /* "id-ecPublicKey" */
      508,    /* "id-hex-multipart-message" */
@@ -5071,7 +5048,7 @@ static const unsigned int ln_objs[NUM_LN] = {
      125,    /* "zlib compression" */
 };
 
-#define NUM_OBJ 1164
+#define NUM_OBJ 1147
 static const unsigned int obj_objs[NUM_OBJ] = {
        0,    /* OBJ_undef                        0 */
      181,    /* OBJ_iso                          1 */
@@ -6162,6 +6139,7 @@ static const unsigned int obj_objs[NUM_OBJ] = {
     1246,    /* OBJ_id_ct_geofeedCSVwithCRLF     1 2 840 113549 1 9 16 1 47 */
     1247,    /* OBJ_id_ct_signedChecklist        1 2 840 113549 1 9 16 1 48 */
     1250,    /* OBJ_id_ct_ASPA                   1 2 840 113549 1 9 16 1 49 */
+    1284,    /* OBJ_id_ct_signedTAL              1 2 840 113549 1 9 16 1 50 */
      212,    /* OBJ_id_smime_aa_receiptRequest   1 2 840 113549 1 9 16 2 1 */
      213,    /* OBJ_id_smime_aa_securityLabel    1 2 840 113549 1 9 16 2 2 */
      214,    /* OBJ_id_smime_aa_mlExpandHistory  1 2 840 113549 1 9 16 2 3 */

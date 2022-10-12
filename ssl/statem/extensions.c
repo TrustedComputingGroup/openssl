@@ -589,7 +589,7 @@ int tls_collect_extensions(SSL_CONNECTION *s, PACKET *packet,
     num_exts = OSSL_NELEM(ext_defs) + (exts != NULL ? exts->meths_count : 0);
     raw_extensions = OPENSSL_zalloc(num_exts * sizeof(*raw_extensions));
     if (raw_extensions == NULL) {
-        SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_MALLOC_FAILURE);
+        SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_CRYPTO_LIB);
         return 0;
     }
 
@@ -1409,7 +1409,7 @@ static int final_key_share(SSL_CONNECTION *s, unsigned int context, int sent)
                     group_id = pgroups[i];
 
                     if (check_in_list(s, group_id, clntgroups, clnt_num_groups,
-                                      2))
+                                      1))
                         break;
                 }
 
@@ -1707,14 +1707,18 @@ static int final_maxfragmentlen(SSL_CONNECTION *s, unsigned int context,
         return 0;
     }
 
-    /* Current SSL buffer is lower than requested MFL */
-    if (s->session && USE_MAX_FRAGMENT_LENGTH_EXT(s->session)
-            && s->max_send_fragment < GET_MAX_FRAGMENT_LENGTH(s->session))
+    if (s->session && USE_MAX_FRAGMENT_LENGTH_EXT(s->session)) {
+        s->rlayer.rrlmethod->set_max_frag_len(s->rlayer.rrl,
+                                              GET_MAX_FRAGMENT_LENGTH(s->session));
+        s->rlayer.wrlmethod->set_max_frag_len(s->rlayer.wrl,
+                                              ssl_get_max_send_fragment(s));
         /* trigger a larger buffer reallocation */
-        if (!ssl3_setup_buffers(s)) {
+        /* TODO(RECLAYER): Remove me when DTLS moved to write record layer */
+        if (SSL_CONNECTION_IS_DTLS(s) && !ssl3_setup_buffers(s)) {
             /* SSLfatal() already called */
             return 0;
         }
+    }
 
     return 1;
 }

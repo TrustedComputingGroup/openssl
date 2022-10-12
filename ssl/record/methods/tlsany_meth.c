@@ -20,7 +20,7 @@ static int tls_any_set_crypto_state(OSSL_RECORD_LAYER *rl, int level,
                                     size_t taglen,
                                     int mactype,
                                     const EVP_MD *md,
-                                    const SSL_COMP *comp)
+                                    COMP_METHOD *comp)
 {
     if (level != OSSL_RECORD_PROTECTION_LEVEL_NONE) {
         ERR_raise(ERR_LIB_SSL, ERR_R_INTERNAL_ERROR);
@@ -134,6 +134,15 @@ static int tls_any_set_protocol_version(OSSL_RECORD_LAYER *rl, int vers)
     return 1;
 }
 
+static int tls_any_prepare_for_encryption(OSSL_RECORD_LAYER *rl,
+                                          size_t mac_size,
+                                          WPACKET *thispkt,
+                                          SSL3_RECORD *thiswr)
+{
+    /* No encryption, so nothing to do */
+    return 1;
+}
+
 struct record_functions_st tls_any_funcs = {
     tls_any_set_crypto_state,
     tls_any_cipher,
@@ -144,7 +153,15 @@ struct record_functions_st tls_any_funcs = {
     tls_validate_record_header,
     tls_default_post_process_record,
     tls_get_max_records_default,
-    tls_write_records_default
+    tls_write_records_default,
+    tls_allocate_write_buffers_default,
+    tls_initialise_write_packets_default,
+    NULL,
+    tls_prepare_record_header_default,
+    NULL,
+    tls_any_prepare_for_encryption,
+    tls_post_encryption_processing_default,
+    NULL
 };
 
 static int dtls_any_set_protocol_version(OSSL_RECORD_LAYER *rl, int vers)
@@ -163,6 +180,14 @@ struct record_functions_st dtls_any_funcs = {
     dtls_any_set_protocol_version,
     tls_default_read_n,
     dtls_get_more_records,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
     NULL,
     NULL,
     NULL,

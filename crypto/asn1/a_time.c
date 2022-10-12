@@ -92,7 +92,7 @@ int ossl_asn1_time_to_tm(struct tm *tm, const ASN1_TIME *d)
      *
      * 1. "seconds" is a 'MUST'
      * 2. "Zulu" timezone is a 'MUST'
-     * 3. "+|-" is not allowed to indicate a time zone
+     * 3. "+|-" is not allowed to indicate a timezone
      */
     if (d->type == V_ASN1_UTCTIME) {
         if (d->flags & ASN1_STRING_FLAG_X509_TIME) {
@@ -420,10 +420,8 @@ int ASN1_TIME_set_string_X509(ASN1_TIME *s, const char *str)
              * new t.data would be freed after ASN1_STRING_copy is done.
              */
             t.data = OPENSSL_zalloc(t.length + 1);
-            if (t.data == NULL) {
-                ERR_raise(ERR_LIB_ASN1, ERR_R_MALLOC_FAILURE);
+            if (t.data == NULL)
                 goto out;
-            }
             memcpy(t.data, str + 2, t.length);
             t.type = V_ASN1_UTCTIME;
         }

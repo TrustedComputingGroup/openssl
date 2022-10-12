@@ -2736,8 +2736,6 @@ __owur int ssl_check_srvr_ecc_cert_and_alg(X509 *x, SSL_CONNECTION *s);
 
 SSL_COMP *ssl3_comp_find(STACK_OF(SSL_COMP) *sk, int n);
 
-__owur uint16_t ssl_group_id_internal_to_tls13(uint16_t curve_id);
-__owur uint16_t ssl_group_id_tls13_to_internal(uint16_t curve_id);
 __owur const TLS_GROUP_INFO *tls1_group_id_lookup(SSL_CTX *ctx, uint16_t curve_id);
 __owur int tls1_group_id2nid(uint16_t group_id, int include_unknown);
 __owur uint16_t tls1_nid2group_id(int nid);
@@ -2853,18 +2851,6 @@ __owur int ssl_log_secret(SSL_CONNECTION *s, const char *label,
 #define SERVER_APPLICATION_N_LABEL "SERVER_TRAFFIC_SECRET_N"
 #define EARLY_EXPORTER_SECRET_LABEL "EARLY_EXPORTER_SECRET"
 #define EXPORTER_SECRET_LABEL "EXPORTER_SECRET"
-
-#  ifndef OPENSSL_NO_KTLS
-/* ktls.c */
-int ktls_check_supported_cipher(const SSL_CONNECTION *s, const EVP_CIPHER *c,
-                                const EVP_MD *md, size_t taglen);
-int ktls_configure_crypto(OSSL_LIB_CTX *libctx, int version,
-                          const EVP_CIPHER *c, const EVP_MD *md,
-                          void *rl_sequence, ktls_crypto_info_t *crypto_info,
-                          int is_tx, unsigned char *iv, size_t ivlen,
-                          unsigned char *key, size_t keylen,
-                          unsigned char *mac_key, size_t mac_secret_size);
-#  endif
 
 __owur int srp_generate_server_master_secret(SSL_CONNECTION *s);
 __owur int srp_generate_client_master_secret(SSL_CONNECTION *s);

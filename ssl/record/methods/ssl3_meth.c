@@ -21,9 +21,10 @@ static int ssl3_set_crypto_state(OSSL_RECORD_LAYER *rl, int level,
                                  size_t taglen,
                                  int mactype,
                                  const EVP_MD *md,
-                                 const SSL_COMP *comp)
+                                 COMP_METHOD *comp)
 {
     EVP_CIPHER_CTX *ciph_ctx;
+    int enc = (rl->direction == OSSL_RECORD_DIRECTION_WRITE) ? 1 : 0;
 
     if (md == NULL) {
         ERR_raise(ERR_LIB_SSL, ERR_R_INTERNAL_ERROR);
@@ -41,17 +42,23 @@ static int ssl3_set_crypto_state(OSSL_RECORD_LAYER *rl, int level,
         ERR_raise(ERR_LIB_SSL, ERR_R_INTERNAL_ERROR);
         return OSSL_RECORD_RETURN_FATAL;
     }
+
+    if ((md != NULL && EVP_DigestInit_ex(rl->md_ctx, md, NULL) <= 0)) {
+        ERR_raise(ERR_LIB_SSL, ERR_R_INTERNAL_ERROR);
+        return OSSL_RECORD_RETURN_FATAL;
+    }
+
 #ifndef OPENSSL_NO_COMP
     if (comp != NULL) {
-        rl->expand = COMP_CTX_new(comp->method);
-        if (rl->expand == NULL) {
+        rl->compctx = COMP_CTX_new(comp);
+        if (rl->compctx == NULL) {
             ERR_raise(ERR_LIB_SSL, SSL_R_COMPRESSION_LIBRARY_ERROR);
             return OSSL_RECORD_RETURN_FATAL;
         }
     }
 #endif
 
-    if (!EVP_DecryptInit_ex(ciph_ctx, ciph, NULL, key, iv)) {
+    if (!EVP_CipherInit_ex(ciph_ctx, ciph, NULL, key, iv, enc)) {
         ERR_raise(ERR_LIB_SSL, ERR_R_INTERNAL_ERROR);
         return OSSL_RECORD_RETURN_FATAL;
     }
@@ -303,5 +310,14 @@ struct record_functions_st ssl_3_0_funcs = {
     tls_default_validate_record_header,
     tls_default_post_process_record,
     tls_get_max_records_default,
-    tls_write_records_default
+    tls_write_records_default,
+    /* These 2 functions are defined in tls1_meth.c */
+    tls1_allocate_write_buffers,
+    tls1_initialise_write_packets,
+    NULL,
+    tls_prepare_record_header_default,
+    NULL,
+    tls_prepare_for_encryption_default,
+    tls_post_encryption_processing_default,
+    NULL
 };

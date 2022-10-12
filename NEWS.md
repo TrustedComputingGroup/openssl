@@ -7,7 +7,7 @@ release. For more details please read the CHANGES file.
 OpenSSL Releases
 ----------------
 
- - [OpenSSL 3.1](#openssl-31)
+ - [OpenSSL 3.2](#openssl-32)
  - [OpenSSL 3.0](#openssl-30)
  - [OpenSSL 1.1.1](#openssl-111)
  - [OpenSSL 1.1.0](#openssl-110)
@@ -16,10 +16,10 @@ OpenSSL Releases
  - [OpenSSL 1.0.0](#openssl-100)
  - [OpenSSL 0.9.x](#openssl-09x)
 
-OpenSSL 3.1
+OpenSSL 3.2
 -----------
 
-### Major changes between OpenSSL 3.0 and OpenSSL 3.1 [under development]
+### Major changes between OpenSSL 3.0 and OpenSSL 3.2 [under development]
 
   * Subject or issuer names in X.509 objects are now displayed as UTF-8 strings
     by default.
@@ -29,6 +29,18 @@ OpenSSL 3.1
 
 OpenSSL 3.0
 -----------
+
+### Major changes between OpenSSL 3.0.5 and OpenSSL 3.0.6 [11 Oct 2022]
+
+  * Fix for custom ciphers to prevent accidental use of NULL encryption
+    ([CVE-2022-3358])
+
+### Major changes between OpenSSL 3.0.4 and OpenSSL 3.0.5 [5 Jul 2022]
+
+  * Fixed heap memory corruption with RSA private key operation
+    ([CVE-2022-2274])
+  * Fixed AES OCB failure to encrypt some bytes on 32-bit x86 platforms
+    ([CVE-2022-2097])
 
 ### Major changes between OpenSSL 3.0.3 and OpenSSL 3.0.4 [21 Jun 2022]
 
@@ -64,7 +76,7 @@ OpenSSL 3.0
   * Enhanced 'openssl list' with many new options.
   * Added migration guide to man7.
   * Implemented support for fully "pluggable" TLSv1.3 groups.
-  * Added suport for Kernel TLS (KTLS).
+  * Added support for Kernel TLS (KTLS).
   * Changed the license to the Apache License v2.0.
   * Moved all variations of the EVP ciphers CAST5, BF, IDEA, SEED, RC2,
     RC4, RC5, and DES to the legacy provider.
@@ -107,7 +119,7 @@ OpenSSL 3.0
   * Deprecated ERR_put_error(), ERR_get_error_line(), ERR_get_error_line_data(),
     ERR_peek_error_line_data(), ERR_peek_last_error_line_data() and
     ERR_func_error_string().
-  * Added OSSL_PROVIDER_available(), to check provider availibility.
+  * Added OSSL_PROVIDER_available(), to check provider availability.
   * Added 'openssl mac' that uses the EVP_MAC API.
   * Added 'openssl kdf' that uses the EVP_KDF API.
   * Add OPENSSL_info() and 'openssl info' to get built-in data.
