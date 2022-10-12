@@ -17,7 +17,6 @@
 #include "x509_local.h"
 #include "crypto/asn1.h"
 
-// static int print_gens(BIO *out, STACK_OF(GENERAL_NAME) *gens, int indent);
 static int i2r_ISSUER_SERIAL(X509V3_EXT_METHOD *method,
                              ISSUER_SERIAL *iss,
                              BIO *out, int indent);
@@ -33,12 +32,6 @@ static int i2r_TARGET(X509V3_EXT_METHOD *method,
 static int i2r_TARGETING_INFORMATION(X509V3_EXT_METHOD *method,
                                      TARGETING_INFORMATION *tinfo,
                                      BIO *out, int indent);
-
-// static int tgt_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
-//                   void *exarg)
-// {
-//     return 1;
-// }
 
 ASN1_SEQUENCE(ISSUER_SERIAL) = {
     ASN1_SIMPLE(ISSUER_SERIAL, issuer, GENERAL_NAMES),
@@ -80,34 +73,22 @@ IMPLEMENT_ASN1_FUNCTIONS(TARGET)
 IMPLEMENT_ASN1_FUNCTIONS(TARGETS)
 IMPLEMENT_ASN1_FUNCTIONS(TARGETING_INFORMATION)
 
-// Copied from crypto/x509/v3_crld.c
-static int print_gens(BIO *out, GENERAL_NAMES *gens, int indent)
-{
-    int i;
-    for (i = 0; i < sk_GENERAL_NAME_num(gens); i++) {
-        if (i > 0)
-            BIO_puts(out, "\n");
-        BIO_printf(out, "%*s", indent + 2, "");
-        GENERAL_NAME_print(out, sk_GENERAL_NAME_value(gens, i));
-    }
-    return 1;
-}
-
 static int i2r_ISSUER_SERIAL(X509V3_EXT_METHOD *method,
                              ISSUER_SERIAL *iss,
                              BIO *out, int indent)
 {
-    if (iss->issuer) {
+    if (iss->issuer != NULL) {
         BIO_printf(out, "%*sIssuer Names:\n", indent, "");
-        print_gens(out, iss->issuer, indent);
+        ossl_print_gens(out, iss->issuer, indent);
         BIO_puts(out, "\n");
     }
-    if (iss->serial) {
+    if (iss->serial != NULL) {
         BIO_printf(out, "%*sIssuer Serial: ", indent, "");
-        i2a_ASN1_INTEGER(out, iss->serial);
+        if (i2a_ASN1_INTEGER(out, iss->serial) <= 0)
+            return 0;
         BIO_puts(out, "\n");
     }
-    if (iss->issuerUID) {
+    if (iss->issuerUID != NULL) {
         BIO_printf(out, "%*sIssuer UID: ", indent, "");
         if (i2a_ASN1_STRING(out, iss->issuerUID, V_ASN1_BIT_STRING) <= 0)
             return 0;
@@ -122,22 +103,31 @@ static int i2r_OBJECT_DIGEST_INFO(X509V3_EXT_METHOD *method,
 {
     int64_t dot = 0;
     int sig_nid;
-    const X509_ALGOR *digalg = odi->digestAlgorithm;
-    const ASN1_STRING *sig = odi->objectDigest;
-    ASN1_ENUMERATED_get_int64(&dot, odi->digestedObjectType);
+    X509_ALGOR *digalg;
+    ASN1_STRING *sig;
+
+    if (odi == NULL) {
+        ERR_raise(ERR_LIB_ASN1, ERR_R_PASSED_NULL_PARAMETER);
+        return 0;
+    }
+    digalg = odi->digestAlgorithm;
+    sig = odi->objectDigest;
+    if (!ASN1_ENUMERATED_get_int64(&dot, odi->digestedObjectType)) {
+        return 0;
+    }
     switch (dot) {
-    case (DOT_PUBLIC_KEY):
+    case (ODI_TYPE_PUBLIC_KEY):
         BIO_printf(out, "%*sDigest Type: Public Key\n", indent, "");
         break;
-    case (DOT_PUBLIC_KEY_CERT):
+    case (ODI_TYPE_PUBLIC_KEY_CERT):
         BIO_printf(out, "%*sDigest Type: Public Key Certificate\n", indent, "");
         break;
-    case (DOT_OTHER): {
+    case (ODI_TYPE_OTHER): {
         BIO_printf(out, "%*sDigest Type: Other\n", indent, "");
         break;
     }
     }
-    if (odi->otherObjectTypeID) {
+    if (odi->otherObjectTypeID != NULL) {
         BIO_printf(out, "%*sDigest Type Identifier: ", indent, "");
         i2a_ASN1_OBJECT(out, odi->otherObjectTypeID);
         BIO_puts(out, "\n");
@@ -171,17 +161,17 @@ static int i2r_TARGET_CERT(X509V3_EXT_METHOD *method,
                            BIO *out, int indent)
 {
     BIO_printf(out, "%*s", indent, "");
-    if (tc->targetCertificate) {
+    if (tc->targetCertificate != NULL) {
         BIO_puts(out, "Target Certificate:\n");
         i2r_ISSUER_SERIAL(method, tc->targetCertificate, out, indent + 2);
     }
-    if (tc->targetName) {
+    if (tc->targetName != NULL) {
         // BIO_puts(out, "Target Name: ");
         BIO_printf(out, "%*sTarget Name: ", indent, "");
         GENERAL_NAME_print(out, tc->targetName);
         BIO_puts(out, "\n");
     }
-    if (tc->certDigestInfo) {
+    if (tc->certDigestInfo != NULL) {
         BIO_printf(out, "%*sCertificate Digest Info:\n", indent, "");
         i2r_OBJECT_DIGEST_INFO(method, tc->certDigestInfo, out, indent + 2);
     }

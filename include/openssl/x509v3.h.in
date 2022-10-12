@@ -783,6 +783,7 @@ ASN1_OCTET_STRING *a2i_IPADDRESS(const char *ipasc);
 ASN1_OCTET_STRING *a2i_IPADDRESS_NC(const char *ipasc);
 int X509V3_NAME_from_section(X509_NAME *nm, STACK_OF(CONF_VALUE) *dn_sk,
                              unsigned long chtype);
+int ossl_print_gens(BIO *out, GENERAL_NAMES *gens, int indent);
 
 void X509_POLICY_NODE_print(BIO *out, X509_POLICY_NODE *node, int indent);
 {-
@@ -1021,10 +1022,11 @@ typedef struct ISSUER_SERIAL_st {
     ASN1_BIT_STRING *issuerUID;
 } ISSUER_SERIAL;
 
+#define ODI_TYPE_PUBLIC_KEY      0
+#define ODI_TYPE_PUBLIC_KEY_CERT 1
+#define ODI_TYPE_OTHER           2
+
 typedef struct OBJECT_DIGEST_INFO_st {
-    #define DOT_PUBLIC_KEY      0
-    #define DOT_PUBLIC_KEY_CERT 1
-    #define DOT_OTHER           2
     ASN1_ENUMERATED *digestedObjectType;
     ASN1_OBJECT *otherObjectTypeID;
     X509_ALGOR *digestAlgorithm;
@@ -1037,10 +1039,11 @@ typedef struct TARGET_CERT_st {
     OBJECT_DIGEST_INFO *certDigestInfo;
 } TARGET_CERT;
 
+# define TGT_TARGET_NAME  0
+# define TGT_TARGET_GROUP 1
+# define TGT_TARGET_CERT  2
+
 typedef struct TARGET_st {
-# define TGT_TARGET_NAME        0
-# define TGT_TARGET_GROUP       1
-# define TGT_TARGET_CERT        2
     int type;
     union {
         GENERAL_NAME *targetName;
@@ -1060,12 +1063,6 @@ typedef STACK_OF(TARGETS) TARGETING_INFORMATION;
     generate_stack_macros("TARGETS");
 -}
 
-DECLARE_ASN1_ITEM(OBJECT_DIGEST_INFO)
-DECLARE_ASN1_ITEM(ISSUER_SERIAL)
-DECLARE_ASN1_ITEM(TARGET_CERT)
-DECLARE_ASN1_ITEM(TARGET)
-DECLARE_ASN1_ITEM(TARGETS)
-DECLARE_ASN1_ITEM(TARGETING_INFORMATION)
 DECLARE_ASN1_FUNCTIONS(ISSUER_SERIAL)
 DECLARE_ASN1_FUNCTIONS(OBJECT_DIGEST_INFO)
 DECLARE_ASN1_FUNCTIONS(TARGET_CERT)
