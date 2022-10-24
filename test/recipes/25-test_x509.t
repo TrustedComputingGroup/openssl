@@ -16,7 +16,7 @@ use OpenSSL::Test qw/:DEFAULT srctop_file/;
 
 setup("test_x509");
 
-plan tests => 43;
+plan tests => 45;
 
 # Prevent MSys2 filename munging for arguments that look like file paths but
 # aren't
@@ -153,6 +153,14 @@ cert_contains($tgt_info_cert,
 cert_contains($tgt_info_cert,
               "Digest Type: Public Key",
               1, 'X.509 Targeting Information Object Digest Type');
+
+my $basic_att_constraints_cert = srctop_file(@certs, "ext-basicAttConstraints.pem");
+cert_contains($basic_att_constraints_cert,
+              "authority:TRUE",
+              1, 'X.509 Basic Attribute Constraints Authority');
+cert_contains($basic_att_constraints_cert,
+              "pathlen:3",
+              1, 'X.509 Basic Attribute Constraints Path Length');
 
 sub test_errors { # actually tests diagnostics of OSSL_STORE
     my ($expected, $cert, @opts) = @_;
