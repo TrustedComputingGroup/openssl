@@ -26,31 +26,6 @@
 #define DTLS_RECORD_LAYER_get_r_epoch(rl)       ((rl)->d->r_epoch)
 
 int dtls_buffer_record(SSL_CONNECTION *s, TLS_RECORD *rec);
-void ssl3_record_sequence_update(unsigned char *seq);
-
-/* Macros/functions provided by the SSL3_BUFFER component */
-
-#define SSL3_BUFFER_get_buf(b)              ((b)->buf)
-#define SSL3_BUFFER_set_buf(b, n)           ((b)->buf = (n))
-#define SSL3_BUFFER_get_len(b)              ((b)->len)
-#define SSL3_BUFFER_set_len(b, l)           ((b)->len = (l))
-#define SSL3_BUFFER_get_left(b)             ((b)->left)
-#define SSL3_BUFFER_set_left(b, l)          ((b)->left = (l))
-#define SSL3_BUFFER_sub_left(b, l)          ((b)->left -= (l))
-#define SSL3_BUFFER_get_offset(b)           ((b)->offset)
-#define SSL3_BUFFER_set_offset(b, o)        ((b)->offset = (o))
-#define SSL3_BUFFER_add_offset(b, o)        ((b)->offset += (o))
-#define SSL3_BUFFER_is_initialised(b)       ((b)->buf != NULL)
-#define SSL3_BUFFER_set_default_len(b, l)   ((b)->default_len = (l))
-#define SSL3_BUFFER_set_app_buffer(b, l)    ((b)->app_buffer = (l))
-#define SSL3_BUFFER_is_app_buffer(b)        ((b)->app_buffer)
-
-void SSL3_BUFFER_clear(SSL3_BUFFER *b);
-void SSL3_BUFFER_set_data(SSL3_BUFFER *b, const unsigned char *d, size_t n);
-void SSL3_BUFFER_release(SSL3_BUFFER *b);
-__owur int ssl3_setup_write_buffer(SSL_CONNECTION *s, size_t numwpipes,
-                                   size_t len);
-int ssl3_release_write_buffer(SSL_CONNECTION *s);
 
 /* Macros/functions provided by the SSL3_RECORD component */
 
@@ -73,7 +48,6 @@ int ssl3_release_write_buffer(SSL_CONNECTION *s);
 #define SSL3_RECORD_add_off(r, o)               ((r)->off += (o))
 #define SSL3_RECORD_get_epoch(r)                ((r)->epoch)
 
-void SSL3_RECORD_clear(SSL3_RECORD *r, size_t);
 void SSL3_RECORD_release(SSL3_RECORD *r, size_t num_recs);
 void SSL3_RECORD_set_seq_num(SSL3_RECORD *r, const unsigned char *seq_num);
 __owur int ssl3_do_compress(SSL_CONNECTION *ssl, SSL3_RECORD *wr);

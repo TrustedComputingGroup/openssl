@@ -22,6 +22,12 @@
 
 static void tls_int_free(OSSL_RECORD_LAYER *rl);
 
+void SSL3_BUFFER_release(SSL3_BUFFER *b)
+{
+    OPENSSL_free(b->buf);
+    b->buf = NULL;
+}
+
 void ossl_rlayer_fatal(OSSL_RECORD_LAYER *rl, int al, int reason,
                        const char *fmt, ...)
 {
@@ -753,7 +759,7 @@ int tls_get_more_records(OSSL_RECORD_LAYER *rl)
      * If in encrypt-then-mac mode calculate mac from encrypted record. All
      * the details below are public so no timing details can leak.
      */
-    if (rl->use_etm && rl->md_ctx) {
+    if (rl->use_etm && rl->md_ctx != NULL) {
         unsigned char *mac;
 
         for (j = 0; j < num_recs; j++) {
@@ -838,8 +844,6 @@ int tls_get_more_records(OSSL_RECORD_LAYER *rl)
     if (rl->enc_ctx != NULL
             && !rl->use_etm
             && EVP_MD_CTX_get0_md(rl->md_ctx) != NULL) {
-        /* rl->md_ctx != NULL => mac_size != -1 */
-
         for (j = 0; j < num_recs; j++) {
             SSL_MAC_BUF *thismb = &macbufs[j];
 
@@ -962,7 +966,7 @@ int tls_default_validate_record_header(OSSL_RECORD_LAYER *rl, SSL3_RECORD *rec)
     return 1;
 }
 
-static int tls_do_compress(OSSL_RECORD_LAYER *rl, SSL3_RECORD *wr)
+int tls_do_compress(OSSL_RECORD_LAYER *rl, SSL3_RECORD *wr)
 {
 #ifndef OPENSSL_NO_COMP
     int i;
@@ -1514,7 +1518,8 @@ int tls_initialise_write_packets_default(OSSL_RECORD_LAYER *rl,
         wb->type = templates[j].type;
 
 #if defined(SSL3_ALIGN_PAYLOAD) && SSL3_ALIGN_PAYLOAD != 0
-        align = (size_t)SSL3_BUFFER_get_buf(wb) + SSL3_RT_HEADER_LENGTH;
+        align = (size_t)SSL3_BUFFER_get_buf(wb);
+        align += rl->isdtls ? DTLS1_RT_HEADER_LENGTH : SSL3_RT_HEADER_LENGTH;
         align = SSL3_ALIGN_PAYLOAD - 1
                 - ((align - 1) % SSL3_ALIGN_PAYLOAD);
 #endif
@@ -1621,6 +1626,8 @@ int tls_post_encryption_processing_default(OSSL_RECORD_LAYER *rl,
                                            SSL3_RECORD *thiswr)
 {
     size_t origlen, len;
+    size_t headerlen = rl->isdtls ? DTLS1_RT_HEADER_LENGTH
+                                  : SSL3_RT_HEADER_LENGTH;
 
     /* Allocate bytes for the encryption overhead */
     if (!WPACKET_get_length(thispkt, &origlen)
@@ -1654,9 +1661,9 @@ int tls_post_encryption_processing_default(OSSL_RECORD_LAYER *rl,
     if (rl->msg_callback != NULL) {
         unsigned char *recordstart;
 
-        recordstart = WPACKET_get_curr(thispkt) - len - SSL3_RT_HEADER_LENGTH;
+        recordstart = WPACKET_get_curr(thispkt) - len - headerlen;
         rl->msg_callback(1, thiswr->rec_version, SSL3_RT_HEADER, recordstart,
-                         SSL3_RT_HEADER_LENGTH, rl->cbarg);
+                         headerlen, rl->cbarg);
 
         if (rl->version == TLS1_3_VERSION && rl->enc_ctx != NULL) {
             unsigned char ctype = thistempl->type;
@@ -1671,7 +1678,7 @@ int tls_post_encryption_processing_default(OSSL_RECORD_LAYER *rl,
         return 0;
     }
 
-    SSL3_RECORD_add_length(thiswr, SSL3_RT_HEADER_LENGTH);
+    SSL3_RECORD_add_length(thiswr, headerlen);
 
     return 1;
 }
@@ -1803,13 +1810,6 @@ int tls_write_records_default(OSSL_RECORD_LAYER *rl,
             /* RLAYERfatal() already called */
             goto err;
         }
-
-        /*
-         * we should now have thiswr->data pointing to the encrypted data, which
-         * is thiswr->length long.
-         * Setting the type is not needed but helps for debugging
-         */
-        SSL3_RECORD_set_type(thiswr, thistempl->type);
 
         /* now let's set up wb */
         SSL3_BUFFER_set_left(&rl->wbuf[j], SSL3_RECORD_get_length(thiswr));
@@ -2010,6 +2010,24 @@ void tls_set_max_frag_len(OSSL_RECORD_LAYER *rl, size_t max_frag_len)
      */
 }
 
+int tls_increment_sequence_ctr(OSSL_RECORD_LAYER *rl)
+{
+    int i;
+
+    /* Increment the sequence counter */
+    for (i = SEQ_NUM_SIZE; i > 0; i--) {
+        ++(rl->sequence[i - 1]);
+        if (rl->sequence[i - 1] != 0)
+            break;
+    }
+    if (i == 0) {
+        /* Sequence has wrapped */
+        RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, SSL_R_SEQUENCE_CTR_WRAPPED);
+        return 0;
+    }
+    return 1;
+}
+
 const OSSL_RECORD_METHOD ossl_tls_record_method = {
     tls_new_record_layer,
     tls_free,
@@ -2034,5 +2052,7 @@ const OSSL_RECORD_METHOD ossl_tls_record_method = {
     tls_get_state,
     tls_set_options,
     tls_get_compression,
-    tls_set_max_frag_len
+    tls_set_max_frag_len,
+    NULL,
+    tls_increment_sequence_ctr
 };

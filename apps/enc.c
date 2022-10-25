@@ -91,7 +91,7 @@ const OPTIONS enc_options[] = {
     {"iter", OPT_ITER, 'p', "Specify the iteration count and force use of PBKDF2"},
     {"pbkdf2", OPT_PBKDF2, '-', "Use password-based key derivation function 2"},
     {"none", OPT_NONE, '-', "Don't encrypt"},
-#ifdef ZLIB
+#ifndef OPENSSL_NO_ZLIB
     {"z", OPT_Z, '-', "Compress or decompress encrypted data using zlib"},
 #endif
     {"", OPT_CIPHER, '-', "Any supported cipher"},
@@ -130,17 +130,29 @@ int enc_main(int argc, char **argv)
     int streamable = 1;
     int wrap = 0;
     struct doall_enc_ciphers dec;
-#ifdef ZLIB
+#ifndef OPENSSL_NO_ZLIB
     int do_zlib = 0;
     BIO *bzl = NULL;
 #endif
+    int do_brotli = 0;
+    BIO *bbrot = NULL;
+    int do_zstd = 0;
+    BIO *bzstd = NULL;
 
     /* first check the command name */
     if (strcmp(argv[0], "base64") == 0)
         base64 = 1;
-#ifdef ZLIB
+#ifndef OPENSSL_NO_ZLIB
     else if (strcmp(argv[0], "zlib") == 0)
         do_zlib = 1;
+#endif
+#ifndef OPENSSL_NO_BROTLI
+    else if (strcmp(argv[0], "brotli") == 0)
+        do_brotli = 1;
+#endif
+#ifndef OPENSSL_NO_ZSTD
+    else if (strcmp(argv[0], "zstd") == 0)
+        do_zstd = 1;
 #endif
     else if (strcmp(argv[0], "enc") != 0)
         ciphername = argv[0];
@@ -213,7 +225,7 @@ int enc_main(int argc, char **argv)
             base64 = 1;
             break;
         case OPT_Z:
-#ifdef ZLIB
+#ifndef OPENSSL_NO_ZLIB
             do_zlib = 1;
 #endif
             break;
@@ -320,15 +332,21 @@ int enc_main(int argc, char **argv)
     if (verbose)
         BIO_printf(bio_err, "bufsize=%d\n", bsize);
 
-#ifdef ZLIB
-    if (!do_zlib)
+#ifndef OPENSSL_NO_ZLIB
+    if (do_zlib)
+        base64 = 0;
 #endif
-        if (base64) {
-            if (enc)
-                outformat = FORMAT_BASE64;
-            else
-                informat = FORMAT_BASE64;
-        }
+    if (do_brotli)
+        base64 = 0;
+    if (do_zstd)
+        base64 = 0;
+
+    if (base64) {
+        if (enc)
+            outformat = FORMAT_BASE64;
+        else
+            informat = FORMAT_BASE64;
+    }
 
     strbuf = app_malloc(SIZE, "strbuf");
     buff = app_malloc(EVP_ENCODE_LENGTH(bsize), "evp buffer");
@@ -398,7 +416,8 @@ int enc_main(int argc, char **argv)
     rbio = in;
     wbio = out;
 
-#ifdef ZLIB
+#ifndef OPENSSL_NO_COMP
+# ifndef OPENSSL_NO_ZLIB
     if (do_zlib) {
         if ((bzl = BIO_new(BIO_f_zlib())) == NULL)
             goto end;
@@ -410,6 +429,33 @@ int enc_main(int argc, char **argv)
             wbio = BIO_push(bzl, wbio);
         else
             rbio = BIO_push(bzl, rbio);
+    }
+# endif
+
+    if (do_brotli) {
+        if ((bbrot = BIO_new(BIO_f_brotli())) == NULL)
+            goto end;
+        if (debug) {
+            BIO_set_callback_ex(bbrot, BIO_debug_callback_ex);
+            BIO_set_callback_arg(bbrot, (char *)bio_err);
+        }
+        if (enc)
+            wbio = BIO_push(bbrot, wbio);
+        else
+            rbio = BIO_push(bbrot, rbio);
+    }
+
+    if (do_zstd) {
+        if ((bzstd = BIO_new(BIO_f_zstd())) == NULL)
+            goto end;
+        if (debug) {
+            BIO_set_callback_ex(bzstd, BIO_debug_callback_ex);
+            BIO_set_callback_arg(bzstd, (char *)bio_err);
+        }
+        if (enc)
+            wbio = BIO_push(bzstd, wbio);
+        else
+            rbio = BIO_push(bzstd, rbio);
     }
 #endif
 
@@ -653,9 +699,11 @@ int enc_main(int argc, char **argv)
     BIO_free(b64);
     EVP_MD_free(dgst);
     EVP_CIPHER_free(cipher);
-#ifdef ZLIB
+#ifndef OPENSSL_NO_ZLIB
     BIO_free(bzl);
 #endif
+    BIO_free(bbrot);
+    BIO_free(bzstd);
     release_engine(e);
     OPENSSL_free(pass);
     return ret;

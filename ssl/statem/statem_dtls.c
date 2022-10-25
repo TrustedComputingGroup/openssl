@@ -94,9 +94,12 @@ void dtls1_hm_fragment_free(hm_fragment *frag)
     if (!frag)
         return;
     if (frag->msg_header.is_ccs) {
-        EVP_CIPHER_CTX_free(frag->msg_header.
-                            saved_retransmit_state.enc_write_ctx);
-        EVP_MD_CTX_free(frag->msg_header.saved_retransmit_state.write_hash);
+        /*
+         * If we're freeing the CCS then we're done with the old wrl and it
+         * can bee freed
+         */
+        if (frag->msg_header.saved_retransmit_state.wrlmethod != NULL)
+            frag->msg_header.saved_retransmit_state.wrlmethod->free(frag->msg_header.saved_retransmit_state.wrl);
     }
     OPENSSL_free(frag->fragment);
     OPENSSL_free(frag->reassembly);
@@ -113,7 +116,7 @@ int dtls1_do_write(SSL_CONNECTION *s, int type)
     size_t written;
     size_t curr_mtu;
     int retry = 1;
-    size_t len, frag_off, mac_size, blocksize, used_len;
+    size_t len, frag_off, overhead, used_len;
     SSL *ssl = SSL_CONNECTION_GET_SSL(s);
 
     if (!dtls1_query_mtu(s))
@@ -129,21 +132,7 @@ int dtls1_do_write(SSL_CONNECTION *s, int type)
             return -1;
     }
 
-    if (s->write_hash) {
-        if (s->enc_write_ctx
-            && (EVP_CIPHER_get_flags(EVP_CIPHER_CTX_get0_cipher(s->enc_write_ctx)) &
-                EVP_CIPH_FLAG_AEAD_CIPHER) != 0)
-            mac_size = 0;
-        else
-            mac_size = EVP_MD_CTX_get_size(s->write_hash);
-    } else
-        mac_size = 0;
-
-    if (s->enc_write_ctx &&
-        (EVP_CIPHER_CTX_get_mode(s->enc_write_ctx) == EVP_CIPH_CBC_MODE))
-        blocksize = 2 * EVP_CIPHER_CTX_get_block_size(s->enc_write_ctx);
-    else
-        blocksize = 0;
+    overhead = s->rlayer.wrlmethod->get_max_record_overhead(s->rlayer.wrl);
 
     frag_off = 0;
     s->rwstate = SSL_NOTHING;
@@ -184,8 +173,7 @@ int dtls1_do_write(SSL_CONNECTION *s, int type)
             }
         }
 
-        used_len = BIO_wpending(s->wbio) + DTLS1_RT_HEADER_LENGTH
-            + mac_size + blocksize;
+        used_len = BIO_wpending(s->wbio) + overhead;
         if (s->d1->mtu > used_len)
             curr_mtu = s->d1->mtu - used_len;
         else
@@ -200,9 +188,8 @@ int dtls1_do_write(SSL_CONNECTION *s, int type)
                 s->rwstate = SSL_WRITING;
                 return ret;
             }
-            used_len = DTLS1_RT_HEADER_LENGTH + mac_size + blocksize;
-            if (s->d1->mtu > used_len + DTLS1_HM_HEADER_LENGTH) {
-                curr_mtu = s->d1->mtu - used_len;
+            if (s->d1->mtu > overhead + DTLS1_HM_HEADER_LENGTH) {
+                curr_mtu = s->d1->mtu - overhead;
             } else {
                 /* Shouldn't happen */
                 return -1;
@@ -1161,12 +1148,9 @@ int dtls1_buffer_message(SSL_CONNECTION *s, int is_ccs)
     frag->msg_header.is_ccs = is_ccs;
 
     /* save current state */
-    frag->msg_header.saved_retransmit_state.enc_write_ctx = s->enc_write_ctx;
-    frag->msg_header.saved_retransmit_state.write_hash = s->write_hash;
-    frag->msg_header.saved_retransmit_state.compress = s->compress;
-    frag->msg_header.saved_retransmit_state.session = s->session;
-    frag->msg_header.saved_retransmit_state.epoch =
-        DTLS_RECORD_LAYER_get_w_epoch(&s->rlayer);
+    frag->msg_header.saved_retransmit_state.wrlmethod = s->rlayer.wrlmethod;
+    frag->msg_header.saved_retransmit_state.wrl = s->rlayer.wrl;
+
 
     memset(seq64be, 0, sizeof(seq64be));
     seq64be[6] =
@@ -1228,32 +1212,27 @@ int dtls1_retransmit_message(SSL_CONNECTION *s, unsigned short seq, int *found)
                                  frag->msg_header.frag_len);
 
     /* save current state */
-    saved_state.enc_write_ctx = s->enc_write_ctx;
-    saved_state.write_hash = s->write_hash;
-    saved_state.compress = s->compress;
-    saved_state.session = s->session;
-    saved_state.epoch = DTLS_RECORD_LAYER_get_w_epoch(&s->rlayer);
+    saved_state.wrlmethod = s->rlayer.wrlmethod;
+    saved_state.wrl = s->rlayer.wrl;
 
     s->d1->retransmitting = 1;
 
     /* restore state in which the message was originally sent */
-    s->enc_write_ctx = frag->msg_header.saved_retransmit_state.enc_write_ctx;
-    s->write_hash = frag->msg_header.saved_retransmit_state.write_hash;
-    s->compress = frag->msg_header.saved_retransmit_state.compress;
-    s->session = frag->msg_header.saved_retransmit_state.session;
-    DTLS_RECORD_LAYER_set_saved_w_epoch(&s->rlayer,
-                                        frag->msg_header.
-                                        saved_retransmit_state.epoch);
+    s->rlayer.wrlmethod = frag->msg_header.saved_retransmit_state.wrlmethod;
+    s->rlayer.wrl = frag->msg_header.saved_retransmit_state.wrl;
+
+    /*
+     * The old wrl may be still pointing at an old BIO. Update it to what we're
+     * using now.
+     */
+    s->rlayer.wrlmethod->set1_bio(s->rlayer.wrl, s->wbio);
 
     ret = dtls1_do_write(s, frag->msg_header.is_ccs ?
                          SSL3_RT_CHANGE_CIPHER_SPEC : SSL3_RT_HANDSHAKE);
 
     /* restore current state */
-    s->enc_write_ctx = saved_state.enc_write_ctx;
-    s->write_hash = saved_state.write_hash;
-    s->compress = saved_state.compress;
-    s->session = saved_state.session;
-    DTLS_RECORD_LAYER_set_saved_w_epoch(&s->rlayer, saved_state.epoch);
+    s->rlayer.wrlmethod = saved_state.wrlmethod;
+    s->rlayer.wrl = saved_state.wrl;
 
     s->d1->retransmitting = 0;
 

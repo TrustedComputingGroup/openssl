@@ -5684,6 +5684,14 @@
 #define NID_oracle_jdk_trustedkeyusage          1283
 #define OBJ_oracle_jdk_trustedkeyusage          OBJ_oracle,746875L,1L,1L
 
+#define SN_brotli               "brotli"
+#define LN_brotli               "Brotli compression"
+#define NID_brotli              1288
+
+#define SN_zstd         "zstd"
+#define LN_zstd         "Zstandard compression"
+#define NID_zstd                1289
+
 #endif /* OPENSSL_OBJ_MAC_H */
 
 #ifndef OPENSSL_NO_DEPRECATED_3_0
