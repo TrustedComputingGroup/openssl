@@ -5595,3 +5595,8 @@ BIO_f_brotli                            ?	3_2_0	EXIST::FUNCTION:COMP
 COMP_zstd                               ?	3_2_0	EXIST::FUNCTION:COMP
 COMP_zstd_oneshot                       ?	3_2_0	EXIST::FUNCTION:COMP
 BIO_f_zstd                              ?	3_2_0	EXIST::FUNCTION:COMP
+d2i_BASIC_ATTR_CONSTRAINTS              ?	3_2_0	EXIST::FUNCTION:
+i2d_BASIC_ATTR_CONSTRAINTS              ?	3_2_0	EXIST::FUNCTION:
+BASIC_ATTR_CONSTRAINTS_free             ?	3_2_0	EXIST::FUNCTION:
+BASIC_ATTR_CONSTRAINTS_new              ?	3_2_0	EXIST::FUNCTION:
+BASIC_ATTR_CONSTRAINTS_it               ?	3_2_0	EXIST::FUNCTION:
