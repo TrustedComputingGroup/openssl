@@ -33,10 +33,6 @@ void RECORD_LAYER_clear(RECORD_LAYER *rl)
     rl->wpend_ret = 0;
     rl->wpend_buf = NULL;
 
-    ssl3_release_write_buffer(rl->s);
-
-    RECORD_LAYER_reset_write_sequence(rl);
-
     if (rl->rrlmethod != NULL)
         rl->rrlmethod->free(rl->rrl); /* Ignore return value */
     if (rl->wrlmethod != NULL)
@@ -54,8 +50,10 @@ void RECORD_LAYER_clear(RECORD_LAYER *rl)
 
 void RECORD_LAYER_release(RECORD_LAYER *rl)
 {
-    if (rl->numwpipes > 0)
-        ssl3_release_write_buffer(rl->s);
+    /*
+     * TODO(RECLAYER): Need a way to release the write buffers in the record
+     * layer on demand
+     */
 }
 
 /* Checks if we have unprocessed read ahead data pending */
@@ -73,16 +71,7 @@ int RECORD_LAYER_processed_read_pending(const RECORD_LAYER *rl)
 
 int RECORD_LAYER_write_pending(const RECORD_LAYER *rl)
 {
-    /* TODO(RECLAYER): Remove me when DTLS is moved to the write record layer */
-    if (SSL_CONNECTION_IS_DTLS(rl->s))
-        return (rl->numwpipes > 0)
-            && SSL3_BUFFER_get_left(&rl->wbuf[rl->numwpipes - 1]) != 0;
     return rl->wpend_tot > 0;
-}
-
-void RECORD_LAYER_reset_write_sequence(RECORD_LAYER *rl)
-{
-    memset(rl->write_sequence, 0, sizeof(rl->write_sequence));
 }
 
 size_t ssl3_pending(const SSL *s)
@@ -307,7 +296,6 @@ int ssl3_write_bytes(SSL *ssl, int type, const void *buf_, size_t len,
      * Some servers hang if initial client hello is larger than 256 bytes
      * and record version number > TLS 1.0
      */
-    /* TODO(RECLAYER): Does this also need to be in the DTLS equivalent code? */
     recversion = (s->version == TLS1_3_VERSION) ? TLS1_2_VERSION : s->version;
     if (SSL_get_state(ssl) == TLS_ST_CW_CLNT_HELLO
             && !s->renegotiate
@@ -999,17 +987,6 @@ int ssl3_read_bytes(SSL *ssl, int type, int *recvd_type, unsigned char *buf,
     }
 }
 
-void ssl3_record_sequence_update(unsigned char *seq)
-{
-    int i;
-
-    for (i = 7; i >= 0; i--) {
-        ++seq[i];
-        if (seq[i] != 0)
-            break;
-    }
-}
-
 /*
  * Returns true if the current rrec was sent in SSLv2 backwards compatible
  * format and false otherwise.
@@ -1267,6 +1244,10 @@ int ssl_set_new_record_layer(SSL_CONNECTION *s, int version,
                 return 0;
             }
             s->rlayer.rrlnext = next;
+        } else {
+            if (SSL_CONNECTION_IS_DTLS(s)
+                    && level != OSSL_RECORD_PROTECTION_LEVEL_NONE)
+                epoch =  DTLS_RECORD_LAYER_get_w_epoch(&s->rlayer) + 1; /* new epoch */
         }
 
         /*
@@ -1325,9 +1306,17 @@ int ssl_set_new_record_layer(SSL_CONNECTION *s, int version,
         break;
     }
 
-    if (*thismethod != NULL && !(*thismethod)->free(*thisrl)) {
-        SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
-        return 0;
+    /*
+     * Free the old record layer if we have one except in the case of DTLS when
+     * writing. In that case the record layer is still referenced by buffered
+     * messages for potential retransmit. Only when those buffered messages get
+     * freed do we free the record layer object (see dtls1_hm_fragment_free)
+     */
+    if (!SSL_CONNECTION_IS_DTLS(s) || direction == OSSL_RECORD_DIRECTION_READ) {
+        if (*thismethod != NULL && !(*thismethod)->free(*thisrl)) {
+            SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
+            return 0;
+        }
     }
 
     *thisrl = newrl;

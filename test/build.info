@@ -74,6 +74,10 @@ IF[{- !$disabled{tests} -}]
     PROGRAMS{noinst}=priority_queue_test event_queue_test
   ENDIF
 
+  IF[{- !$disabled{comp} && (!$disabled{brotli} || !$disabled{zstd} || !$disabled{zlib}) -}]
+    PROGRAMS{noinst}=cert_comp_test
+  ENDIF
+
   SOURCE[confdump]=confdump.c
   INCLUDE[confdump]=../include ../apps/include
   DEPEND[confdump]=../libcrypto
@@ -341,8 +345,8 @@ IF[{- !$disabled{tests} -}]
   DEPEND[ct_test]=../libcrypto libtestutil.a
 
   SOURCE[threadstest]=threadstest.c
-  INCLUDE[threadstest]=../include ../apps/include
-  DEPEND[threadstest]=../libcrypto libtestutil.a
+  INCLUDE[threadstest]=.. ../include ../apps/include
+  DEPEND[threadstest]=../libcrypto.a libtestutil.a
 
   SOURCE[threadstest_fips]=threadstest_fips.c
   INCLUDE[threadstest_fips]=../include ../apps/include
@@ -900,6 +904,13 @@ IF[{- !$disabled{tests} -}]
   INCLUDE[context_internal_test]=.. ../include ../apps/include
   DEPEND[context_internal_test]=../libcrypto.a libtestutil.a
 
+  IF[{- !$disabled{zlib} || !$disabled{brotli} || !$disabled{zstd} -}]
+    PROGRAMS{noinst}=bio_comp_test
+    SOURCE[bio_comp_test]=bio_comp_test.c
+    INCLUDE[bio_comp_test]=../include ../apps/include
+    DEPEND[bio_comp_test]=../libcrypto.a libtestutil.a
+  ENDIF
+
   PROGRAMS{noinst}=provider_internal_test
   DEFINE[provider_internal_test]=PROVIDER_INIT_FUNCTION_NAME=p_test_init
   SOURCE[provider_internal_test]=provider_internal_test.c p_test.c
@@ -1019,6 +1030,10 @@ ENDIF
   SOURCE[x509acert_test]=x509acert_test.c
   INCLUDE[x509acert_test]=../include ../apps/include
   DEPEND[x509acert_test]=../libcrypto.a libtestutil.a
+
+  SOURCE[cert_comp_test]=cert_comp_test.c helpers/ssltestlib.c
+  INCLUDE[cert_comp_test]=../include ../apps/include ..
+  DEPEND[cert_comp_test]=../libcrypto ../libssl libtestutil.a
 
 {-
    use File::Spec::Functions;

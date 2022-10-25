@@ -344,13 +344,27 @@ __owur int ssl3_cbc_digest_record(const EVP_MD *md,
                                   const unsigned char *mac_secret,
                                   size_t mac_secret_length, char is_sslv3);
 
+int tls_increment_sequence_ctr(OSSL_RECORD_LAYER *rl);
+
 int tls_default_read_n(OSSL_RECORD_LAYER *rl, size_t n, size_t max, int extend,
                        int clearold, size_t *readbytes);
 int tls_get_more_records(OSSL_RECORD_LAYER *rl);
 int dtls_get_more_records(OSSL_RECORD_LAYER *rl);
 
+int dtls_prepare_record_header(OSSL_RECORD_LAYER *rl,
+                               WPACKET *thispkt,
+                               OSSL_RECORD_TEMPLATE *templ,
+                               unsigned int rectype,
+                               unsigned char **recdata);
+int dtls_post_encryption_processing(OSSL_RECORD_LAYER *rl,
+                                    size_t mac_size,
+                                    OSSL_RECORD_TEMPLATE *thistempl,
+                                    WPACKET *thispkt,
+                                    SSL3_RECORD *thiswr);
+
 int tls_default_set_protocol_version(OSSL_RECORD_LAYER *rl, int version);
 int tls_default_validate_record_header(OSSL_RECORD_LAYER *rl, SSL3_RECORD *re);
+int tls_do_compress(OSSL_RECORD_LAYER *rl, SSL3_RECORD *wr);
 int tls_do_uncompress(OSSL_RECORD_LAYER *rl, SSL3_RECORD *rec);
 int tls_default_post_process_record(OSSL_RECORD_LAYER *rl, SSL3_RECORD *rec);
 int tls13_common_post_process_record(OSSL_RECORD_LAYER *rl, SSL3_RECORD *rec);
@@ -446,3 +460,19 @@ int tls_post_encryption_processing_default(OSSL_RECORD_LAYER *rl,
 int tls_write_records_default(OSSL_RECORD_LAYER *rl,
                               OSSL_RECORD_TEMPLATE *templates,
                               size_t numtempl);
+
+/* Macros/functions provided by the SSL3_BUFFER component */
+
+#define SSL3_BUFFER_get_buf(b)              ((b)->buf)
+#define SSL3_BUFFER_set_buf(b, n)           ((b)->buf = (n))
+#define SSL3_BUFFER_get_len(b)              ((b)->len)
+#define SSL3_BUFFER_get_left(b)             ((b)->left)
+#define SSL3_BUFFER_set_left(b, l)          ((b)->left = (l))
+#define SSL3_BUFFER_sub_left(b, l)          ((b)->left -= (l))
+#define SSL3_BUFFER_get_offset(b)           ((b)->offset)
+#define SSL3_BUFFER_set_offset(b, o)        ((b)->offset = (o))
+#define SSL3_BUFFER_add_offset(b, o)        ((b)->offset += (o))
+#define SSL3_BUFFER_set_app_buffer(b, l)    ((b)->app_buffer = (l))
+#define SSL3_BUFFER_is_app_buffer(b)        ((b)->app_buffer)
+
+void SSL3_BUFFER_release(SSL3_BUFFER *b);

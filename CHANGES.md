@@ -24,6 +24,11 @@ OpenSSL 3.2
 
 ### Changes between 3.0 and 3.2 [xx XXX xxxx]
 
+ * Add support for certificate compression (RFC8879), including
+   library support for Brotli and Zstandard compression.
+
+   *Todd Short*
+
  * Add the ability to add custom attributes to PKCS12 files. Add a new API
    PKCS12_create_ex2, identical to the existing PKCS12_create_ex but allows
    for a user specified callback and optional argument.
@@ -217,6 +222,12 @@ The migration guide contains more detailed information related to new features,
 breaking changes, and mappings for the large list of deprecated functions.
 
 [Migration guide]: https://github.com/openssl/openssl/tree/master/doc/man7/migration_guide.pod
+
+### Changes between 3.0.6 and 3.0.7 [xx XXX xxxx]
+
+ * Added RIPEMD160 to the default provider.
+
+   *Paul Dale*
 
 ### Changes between 3.0.5 and 3.0.6 [11 Oct 2022]
 

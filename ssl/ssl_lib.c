@@ -26,18 +26,6 @@
 #include "internal/refcount.h"
 #include "internal/ktls.h"
 
-static int ssl_undefined_function_1(SSL_CONNECTION *sc, SSL3_RECORD *r, size_t s,
-                                    int t, SSL_MAC_BUF *mac, size_t macsize)
-{
-    return ssl_undefined_function(SSL_CONNECTION_GET_SSL(sc));
-}
-
-static int ssl_undefined_function_2(SSL_CONNECTION *sc, SSL3_RECORD *r,
-                                    unsigned char *s, int t)
-{
-    return ssl_undefined_function(SSL_CONNECTION_GET_SSL(sc));
-}
-
 static int ssl_undefined_function_3(SSL_CONNECTION *sc, unsigned char *r,
                                     unsigned char *s, size_t t, size_t *u)
 {
@@ -73,8 +61,6 @@ static int ssl_undefined_function_8(SSL_CONNECTION *sc)
 }
 
 SSL3_ENC_METHOD ssl3_undef_enc_method = {
-    ssl_undefined_function_1,
-    ssl_undefined_function_2,
     ssl_undefined_function_8,
     ssl_undefined_function_3,
     ssl_undefined_function_4,
@@ -615,6 +601,9 @@ int ossl_ssl_connection_reset(SSL *s)
     sc->first_packet = 0;
 
     sc->key_update = SSL_KEY_UPDATE_NONE;
+    memset(sc->ext.compress_certificate_from_peer, 0,
+           sizeof(sc->ext.compress_certificate_from_peer));
+    sc->ext.compress_certificate_sent = 0;
 
     EVP_MD_CTX_free(sc->pha_dgst);
     sc->pha_dgst = NULL;
@@ -889,6 +878,10 @@ SSL *ossl_ssl_connection_new(SSL_CTX *ctx)
     s->async_cb_arg = ctx->async_cb_arg;
 
     s->job = NULL;
+
+#ifndef OPENSSL_NO_COMP_ALG
+    memcpy(s->cert_comp_prefs, ctx->cert_comp_prefs, sizeof(s->cert_comp_prefs));
+#endif
 
 #ifndef OPENSSL_NO_CT
     if (!SSL_set_ct_validation_callback(ssl, ctx->ct_validation_callback,
@@ -1362,11 +1355,6 @@ void ossl_ssl_connection_free(SSL *ssl)
 
     RECORD_LAYER_clear(&s->rlayer);
 
-    BIO_free_all(s->wbio);
-    s->wbio = NULL;
-    BIO_free_all(s->rbio);
-    s->rbio = NULL;
-
     BUF_MEM_free(s->init_buf);
 
     /* add extra stuff */
@@ -1429,6 +1417,17 @@ void ossl_ssl_connection_free(SSL *ssl)
 #ifndef OPENSSL_NO_SRTP
     sk_SRTP_PROTECTION_PROFILE_free(s->srtp_profiles);
 #endif
+
+    /*
+     * We do this late. We want to ensure that any other references we held to
+     * these BIOs are freed first *before* we call BIO_free_all(), because
+     * BIO_free_all() will only free each BIO in the chain if the number of
+     * references to the first BIO have dropped to 0
+     */
+    BIO_free_all(s->wbio);
+    s->wbio = NULL;
+    BIO_free_all(s->rbio);
+    s->rbio = NULL;
 }
 
 void SSL_set0_rbio(SSL *s, BIO *rbio)
@@ -3658,6 +3657,9 @@ SSL_CTX *SSL_CTX_new_ex(OSSL_LIB_CTX *libctx, const char *propq,
                         const SSL_METHOD *meth)
 {
     SSL_CTX *ret = NULL;
+#ifndef OPENSSL_NO_COMP_ALG
+    int i;
+#endif
 
     if (meth == NULL) {
         ERR_raise(ERR_LIB_SSL, SSL_R_NULL_SSL_METHOD_PASSED);
@@ -3831,6 +3833,21 @@ SSL_CTX *SSL_CTX_new_ex(OSSL_LIB_CTX *libctx, const char *propq,
             ERR_clear_error();
     }
 # endif
+#endif
+
+#ifndef OPENSSL_NO_COMP_ALG
+    /*
+     * Set the default order: brotli, zlib, zstd
+     * Including only those enabled algorithms
+     */
+    memset(ret->cert_comp_prefs, 0, sizeof(ret->cert_comp_prefs));
+    i = 0;
+    if (ossl_comp_has_alg(TLSEXT_comp_cert_brotli))
+        ret->cert_comp_prefs[i++] = TLSEXT_comp_cert_brotli;
+    if (ossl_comp_has_alg(TLSEXT_comp_cert_zlib))
+        ret->cert_comp_prefs[i++] = TLSEXT_comp_cert_zlib;
+    if (ossl_comp_has_alg(TLSEXT_comp_cert_zstd))
+        ret->cert_comp_prefs[i++] = TLSEXT_comp_cert_zstd;
 #endif
     /*
      * Disable compression by default to prevent CRIME. Applications can
@@ -4786,10 +4803,6 @@ const COMP_METHOD *SSL_get_current_compression(const SSL *s)
 
     if (sc == NULL)
         return NULL;
-
-    /* TODO(RECLAYER): Remove me once SSLv3/DTLS moved to write record layer */
-    if (SSL_CONNECTION_IS_DTLS(sc) || sc->version == SSL3_VERSION)
-        return sc->compress ? COMP_CTX_get_method(sc->compress) : NULL;
 
     return sc->rlayer.wrlmethod->get_compression(sc->rlayer.wrl);
 #else
@@ -5774,8 +5787,7 @@ static int ct_move_scts(STACK_OF(SCT) **dst, STACK_OF(SCT) *src,
         }
     }
 
-    while (sk_SCT_num(src) > 0) {
-        sct = sk_SCT_pop(src);
+    while ((sct = sk_SCT_pop(src)) != NULL) {
         if (SCT_set_source(sct, origin) != 1)
             goto err;
 
@@ -6367,7 +6379,8 @@ int SSL_alloc_buffers(SSL *ssl)
     if (sc == NULL)
         return 0;
 
-    return ssl3_setup_buffers(sc);
+    /* TODO(RECLAYER): Need a way to make this happen in the record layer */
+    return 1;
 }
 
 void SSL_CTX_set_keylog_callback(SSL_CTX *ctx, SSL_CTX_keylog_cb_func cb)

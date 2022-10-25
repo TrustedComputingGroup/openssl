@@ -689,6 +689,81 @@ dtls_new_record_layer(OSSL_LIB_CTX *libctx, const char *propq, int vers,
     return ret;
 }
 
+int dtls_prepare_record_header(OSSL_RECORD_LAYER *rl,
+                               WPACKET *thispkt,
+                               OSSL_RECORD_TEMPLATE *templ,
+                               unsigned int rectype,
+                               unsigned char **recdata)
+{
+    size_t maxcomplen;
+
+    *recdata = NULL;
+
+    maxcomplen = templ->buflen;
+    if (rl->compctx != NULL)
+        maxcomplen += SSL3_RT_MAX_COMPRESSED_OVERHEAD;
+
+    if (!WPACKET_put_bytes_u8(thispkt, rectype)
+            || !WPACKET_put_bytes_u16(thispkt, templ->version)
+            || !WPACKET_put_bytes_u16(thispkt, rl->epoch)
+            || !WPACKET_memcpy(thispkt, &(rl->sequence[2]), 6)
+            || !WPACKET_start_sub_packet_u16(thispkt)
+            || (rl->eivlen > 0
+                && !WPACKET_allocate_bytes(thispkt, rl->eivlen, NULL))
+            || (maxcomplen > 0
+                && !WPACKET_reserve_bytes(thispkt, maxcomplen,
+                                          recdata))) {
+        RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
+        return 0;
+    }
+
+    return 1;
+}
+
+int dtls_post_encryption_processing(OSSL_RECORD_LAYER *rl,
+                                    size_t mac_size,
+                                    OSSL_RECORD_TEMPLATE *thistempl,
+                                    WPACKET *thispkt,
+                                    SSL3_RECORD *thiswr)
+{
+    if (!tls_post_encryption_processing_default(rl, mac_size, thistempl,
+                                                thispkt, thiswr)) {
+        /* RLAYERfatal() already called */
+        return 0;
+    }
+
+    return tls_increment_sequence_ctr(rl);
+}
+
+static size_t dtls_get_max_record_overhead(OSSL_RECORD_LAYER *rl)
+{
+    size_t blocksize, mac_size;
+
+    /*
+     * TODO(RECLAYER): Review this. This is what the existing code did.
+     * I suspect it's not quite right. What about IV? AEAD Tag? Compression
+     * expansion?
+     */
+    if (rl->md_ctx != NULL) {
+        if (rl->enc_ctx != NULL
+            && (EVP_CIPHER_get_flags(EVP_CIPHER_CTX_get0_cipher(rl->enc_ctx)) &
+                EVP_CIPH_FLAG_AEAD_CIPHER) != 0)
+            mac_size = 0;
+        else
+            mac_size = EVP_MD_CTX_get_size(rl->md_ctx);
+    } else {
+        mac_size = 0;
+    }
+
+    if (rl->enc_ctx != NULL &&
+        (EVP_CIPHER_CTX_get_mode(rl->enc_ctx) == EVP_CIPH_CBC_MODE))
+        blocksize = 2 * EVP_CIPHER_CTX_get_block_size(rl->enc_ctx);
+    else
+        blocksize = 0;
+
+    return DTLS1_RT_HEADER_LENGTH + mac_size + blocksize;
+}
+
 const OSSL_RECORD_METHOD ossl_dtls_record_method = {
     dtls_new_record_layer,
     dtls_free,
@@ -713,5 +788,7 @@ const OSSL_RECORD_METHOD ossl_dtls_record_method = {
     tls_get_state,
     tls_set_options,
     tls_get_compression,
-    tls_set_max_frag_len
+    tls_set_max_frag_len,
+    dtls_get_max_record_overhead,
+    tls_increment_sequence_ctr
 };

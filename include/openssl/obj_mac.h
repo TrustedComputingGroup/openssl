@@ -2720,27 +2720,27 @@
 
 #define SN_authority_attribute_identifier               "authorityAttributeIdentifier"
 #define LN_authority_attribute_identifier               "X509v3 Authority Attribute Identifier"
-#define NID_authority_attribute_identifier              1284
+#define NID_authority_attribute_identifier              1290
 #define OBJ_authority_attribute_identifier              OBJ_id_ce,38L
 
 #define SN_role_spec_cert_identifier            "roleSpecCertIdentifier"
 #define LN_role_spec_cert_identifier            "X509v3 Role Specification Certificate Identifier"
-#define NID_role_spec_cert_identifier           1285
+#define NID_role_spec_cert_identifier           1291
 #define OBJ_role_spec_cert_identifier           OBJ_id_ce,39L
 
 #define SN_basic_att_constraints                "basicAttConstraints"
 #define LN_basic_att_constraints                "X509v3 Basic Attribute Certificate Constraints"
-#define NID_basic_att_constraints               1286
+#define NID_basic_att_constraints               1292
 #define OBJ_basic_att_constraints               OBJ_id_ce,41L
 
 #define SN_delegated_name_constraints           "delegatedNameConstraints"
 #define LN_delegated_name_constraints           "X509v3 Delegated Name Constraints"
-#define NID_delegated_name_constraints          1287
+#define NID_delegated_name_constraints          1293
 #define OBJ_delegated_name_constraints          OBJ_id_ce,42L
 
 #define SN_time_specification           "timeSpecification"
 #define LN_time_specification           "X509v3 Time Specification"
-#define NID_time_specification          1288
+#define NID_time_specification          1294
 #define OBJ_time_specification          OBJ_id_ce,43L
 
 #define SN_freshest_crl         "freshestCRL"
@@ -2750,22 +2750,22 @@
 
 #define SN_attribute_descriptor         "attributeDescriptor"
 #define LN_attribute_descriptor         "X509v3 Attribute Descriptor"
-#define NID_attribute_descriptor                1289
+#define NID_attribute_descriptor                1295
 #define OBJ_attribute_descriptor                OBJ_id_ce,48L
 
 #define SN_user_notice          "userNotice"
 #define LN_user_notice          "X509v3 User Notice"
-#define NID_user_notice         1290
+#define NID_user_notice         1296
 #define OBJ_user_notice         OBJ_id_ce,49L
 
 #define SN_soa_identifier               "sOAIdentifier"
 #define LN_soa_identifier               "X509v3 Source of Authority Identifier"
-#define NID_soa_identifier              1291
+#define NID_soa_identifier              1297
 #define OBJ_soa_identifier              OBJ_id_ce,50L
 
 #define SN_acceptable_cert_policies             "acceptableCertPolicies"
 #define LN_acceptable_cert_policies             "X509v3 Acceptable Certification Policies"
-#define NID_acceptable_cert_policies            1292
+#define NID_acceptable_cert_policies            1298
 #define OBJ_acceptable_cert_policies            OBJ_id_ce,52L
 
 #define SN_inhibit_any_policy           "inhibitAnyPolicy"
@@ -2785,47 +2785,47 @@
 
 #define SN_acceptable_privilege_policies                "acceptablePrivPolicies"
 #define LN_acceptable_privilege_policies                "X509v3 Acceptable Privilege Policies"
-#define NID_acceptable_privilege_policies               1293
+#define NID_acceptable_privilege_policies               1299
 #define OBJ_acceptable_privilege_policies               OBJ_id_ce,57L
 
 #define SN_indirect_issuer              "indirectIssuer"
 #define LN_indirect_issuer              "X509v3 Indirect Issuer"
-#define NID_indirect_issuer             1294
+#define NID_indirect_issuer             1300
 #define OBJ_indirect_issuer             OBJ_id_ce,61L
 
 #define SN_no_assertion         "noAssertion"
 #define LN_no_assertion         "X509v3 No Assertion"
-#define NID_no_assertion                1295
+#define NID_no_assertion                1301
 #define OBJ_no_assertion                OBJ_id_ce,62L
 
 #define SN_issued_on_behalf_of          "issuedOnBehalfOf"
 #define LN_issued_on_behalf_of          "X509v3 Issued On Behalf Of"
-#define NID_issued_on_behalf_of         1296
+#define NID_issued_on_behalf_of         1302
 #define OBJ_issued_on_behalf_of         OBJ_id_ce,64L
 
 #define SN_single_use           "singleUse"
 #define LN_single_use           "X509v3 Single Use"
-#define NID_single_use          1297
+#define NID_single_use          1303
 #define OBJ_single_use          OBJ_id_ce,65L
 
 #define SN_group_ac             "groupAC"
 #define LN_group_ac             "X509v3 Group Attribute Certificate"
-#define NID_group_ac            1298
+#define NID_group_ac            1304
 #define OBJ_group_ac            OBJ_id_ce,66L
 
 #define SN_allowed_attribute_assignments                "allowedAttributeAssignments"
 #define LN_allowed_attribute_assignments                "X509v3 Allowed Attribute Assignments"
-#define NID_allowed_attribute_assignments               1299
+#define NID_allowed_attribute_assignments               1305
 #define OBJ_allowed_attribute_assignments               OBJ_id_ce,67L
 
 #define SN_attribute_mappings           "attributeMappings"
 #define LN_attribute_mappings           "X509v3 Attribute Mappings"
-#define NID_attribute_mappings          1300
+#define NID_attribute_mappings          1306
 #define OBJ_attribute_mappings          OBJ_id_ce,68L
 
 #define SN_holder_name_constraints              "holderNameConstraints"
 #define LN_holder_name_constraints              "X509v3 Holder Name Constraints"
-#define NID_holder_name_constraints             1301
+#define NID_holder_name_constraints             1307
 #define OBJ_holder_name_constraints             OBJ_id_ce,69L
 
 #define SN_anyExtendedKeyUsage          "anyExtendedKeyUsage"
@@ -5683,6 +5683,14 @@
 #define LN_oracle_jdk_trustedkeyusage           "Trusted key usage (Oracle)"
 #define NID_oracle_jdk_trustedkeyusage          1283
 #define OBJ_oracle_jdk_trustedkeyusage          OBJ_oracle,746875L,1L,1L
+
+#define SN_brotli               "brotli"
+#define LN_brotli               "Brotli compression"
+#define NID_brotli              1288
+
+#define SN_zstd         "zstd"
+#define LN_zstd         "Zstandard compression"
+#define NID_zstd                1289
 
 #endif /* OPENSSL_OBJ_MAC_H */
 
