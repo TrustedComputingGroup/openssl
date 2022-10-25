@@ -16,7 +16,7 @@ use OpenSSL::Test qw/:DEFAULT srctop_file/;
 
 setup("test_x509");
 
-plan tests => 45;
+plan tests => 48;
 
 # Prevent MSys2 filename munging for arguments that look like file paths but
 # aren't
@@ -161,6 +161,17 @@ cert_contains($bacons_cert,
 cert_contains($bacons_cert,
               "pathlen:3",
               1, 'X.509 Basic Attribute Constraints Path Length');
+
+my $dncons_cert = srctop_file(@certs, "ext-delegatedNameConstraints.pem");
+cert_contains($dncons_cert,
+              "DirName:CN = Wil",
+              1, 'X.509 Delegated Name Constraints');
+cert_contains($dncons_cert,
+              "Permitted:",
+              1, 'X.509 Delegated Name Constraints');
+cert_contains($dncons_cert,
+              "Excluded:",
+              1, 'X.509 Delegated Name Constraints');
 
 sub test_errors { # actually tests diagnostics of OSSL_STORE
     my ($expected, $cert, @opts) = @_;
