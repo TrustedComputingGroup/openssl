@@ -76,6 +76,7 @@ static const X509V3_EXT_METHOD *standard_exts[] = {
     &ossl_v3_tls_feature,
     &ossl_v3_ext_admission,
     &ossl_v3_bacons,
+    &ossl_v3_delegated_name_constraints,
     &ossl_v3_soa_identifier,
     &ossl_v3_no_assertion,
     &ossl_v3_single_use,
