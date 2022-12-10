@@ -1305,3 +1305,9 @@ group_ac		1304
 allowed_attribute_assignments		1305
 attribute_mappings		1306
 holder_name_constraints		1307
+authorization_validation		1308
+prot_restrict		1309
+subject_alt_public_key_info		1310
+alt_signature_algorithm		1311
+alt_signature_value		1312
+associated_information		1313

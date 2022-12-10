@@ -10,7 +10,7 @@
  */
 
 /* Serialized OID's */
-static const unsigned char so[8410] = {
+static const unsigned char so[8428] = {
     0x2A,0x86,0x48,0x86,0xF7,0x0D,                 /* [    0] OBJ_rsadsi */
     0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,            /* [    6] OBJ_pkcs */
     0x2A,0x86,0x48,0x86,0xF7,0x0D,0x02,0x02,       /* [   13] OBJ_md2 */
@@ -1170,9 +1170,15 @@ static const unsigned char so[8410] = {
     0x55,0x1D,0x43,                                /* [ 8400] OBJ_allowed_attribute_assignments */
     0x55,0x1D,0x44,                                /* [ 8403] OBJ_attribute_mappings */
     0x55,0x1D,0x45,                                /* [ 8406] OBJ_holder_name_constraints */
+    0x55,0x1D,0x46,                                /* [ 8409] OBJ_authorization_validation */
+    0x55,0x1D,0x47,                                /* [ 8412] OBJ_prot_restrict */
+    0x55,0x1D,0x48,                                /* [ 8415] OBJ_subject_alt_public_key_info */
+    0x55,0x1D,0x49,                                /* [ 8418] OBJ_alt_signature_algorithm */
+    0x55,0x1D,0x4A,                                /* [ 8421] OBJ_alt_signature_value */
+    0x55,0x1D,0x4B,                                /* [ 8424] OBJ_associated_information */
 };
 
-#define NUM_NID 1308
+#define NUM_NID 1314
 static const ASN1_OBJECT nid_objs[NUM_NID] = {
     {"UNDEF", "undefined", NID_undef},
     {"rsadsi", "RSA Data Security, Inc.", NID_rsadsi, 6, &so[0]},
@@ -2482,9 +2488,15 @@ static const ASN1_OBJECT nid_objs[NUM_NID] = {
     {"allowedAttributeAssignments", "X509v3 Allowed Attribute Assignments", NID_allowed_attribute_assignments, 3, &so[8400]},
     {"attributeMappings", "X509v3 Attribute Mappings", NID_attribute_mappings, 3, &so[8403]},
     {"holderNameConstraints", "X509v3 Holder Name Constraints", NID_holder_name_constraints, 3, &so[8406]},
+    {"authorizationValidation", "X509v3 Authorization Validation", NID_authorization_validation, 3, &so[8409]},
+    {"protRestrict", "X509v3 Protocol Restriction", NID_prot_restrict, 3, &so[8412]},
+    {"subjectAltPublicKeyInfo", "X509v3 Subject Alternative Public Key Info", NID_subject_alt_public_key_info, 3, &so[8415]},
+    {"altSignatureAlgorithm", "X509v3 Alternative Signature Algorithm", NID_alt_signature_algorithm, 3, &so[8418]},
+    {"altSignatureValue", "X509v3 Alternative Signature Value", NID_alt_signature_value, 3, &so[8421]},
+    {"associatedInformation", "X509v3 Associated Information", NID_associated_information, 3, &so[8424]},
 };
 
-#define NUM_SN 1299
+#define NUM_SN 1305
 static const unsigned int sn_objs[NUM_SN] = {
      364,    /* "AD_DVCS" */
      419,    /* "AES-128-CBC" */
@@ -2805,11 +2817,14 @@ static const unsigned int sn_objs[NUM_SN] = {
      363,    /* "ad_timestamping" */
      376,    /* "algorithm" */
     1305,    /* "allowedAttributeAssignments" */
+    1311,    /* "altSignatureAlgorithm" */
+    1312,    /* "altSignatureValue" */
      405,    /* "ansi-X9-62" */
      910,    /* "anyExtendedKeyUsage" */
      746,    /* "anyPolicy" */
      370,    /* "archiveCutoff" */
      484,    /* "associatedDomain" */
+    1313,    /* "associatedInformation" */
      485,    /* "associatedName" */
     1295,    /* "attributeDescriptor" */
     1306,    /* "attributeMappings" */
@@ -2818,6 +2833,7 @@ static const unsigned int sn_objs[NUM_SN] = {
      177,    /* "authorityInfoAccess" */
       90,    /* "authorityKeyIdentifier" */
      882,    /* "authorityRevocationList" */
+    1308,    /* "authorizationValidation" */
     1292,    /* "basicAttConstraints" */
       87,    /* "basicConstraints" */
      365,    /* "basicOCSPResponse" */
@@ -3510,6 +3526,7 @@ static const unsigned int sn_objs[NUM_SN] = {
      415,    /* "prime256v1" */
      385,    /* "private" */
       84,    /* "privateKeyUsagePeriod" */
+    1309,    /* "protRestrict" */
      886,    /* "protocolInformation" */
      663,    /* "proxyCertInfo" */
      510,    /* "pseudonym" */
@@ -3724,6 +3741,7 @@ static const unsigned int sn_objs[NUM_SN] = {
      387,    /* "snmpv2" */
      660,    /* "street" */
       85,    /* "subjectAltName" */
+    1310,    /* "subjectAltPublicKeyInfo" */
      769,    /* "subjectDirectoryAttributes" */
      398,    /* "subjectInfoAccess" */
       82,    /* "subjectKeyIdentifier" */
@@ -3787,7 +3805,7 @@ static const unsigned int sn_objs[NUM_SN] = {
     1289,    /* "zstd" */
 };
 
-#define NUM_LN 1299
+#define NUM_LN 1305
 static const unsigned int ln_objs[NUM_LN] = {
      363,    /* "AD Time Stamping" */
      405,    /* "ANSI X9.62" */
@@ -3994,11 +4012,15 @@ static const unsigned int ln_objs[NUM_LN] = {
     1298,    /* "X509v3 Acceptable Certification Policies" */
     1299,    /* "X509v3 Acceptable Privilege Policies" */
     1305,    /* "X509v3 Allowed Attribute Assignments" */
+    1311,    /* "X509v3 Alternative Signature Algorithm" */
+    1312,    /* "X509v3 Alternative Signature Value" */
      746,    /* "X509v3 Any Policy" */
+    1313,    /* "X509v3 Associated Information" */
     1295,    /* "X509v3 Attribute Descriptor" */
     1306,    /* "X509v3 Attribute Mappings" */
     1290,    /* "X509v3 Authority Attribute Identifier" */
       90,    /* "X509v3 Authority Key Identifier" */
+    1308,    /* "X509v3 Authorization Validation" */
     1292,    /* "X509v3 Basic Attribute Certificate Constraints" */
       87,    /* "X509v3 Basic Constraints" */
      103,    /* "X509v3 CRL Distribution Points" */
@@ -4024,10 +4046,12 @@ static const unsigned int ln_objs[NUM_LN] = {
      401,    /* "X509v3 Policy Constraints" */
      747,    /* "X509v3 Policy Mappings" */
       84,    /* "X509v3 Private Key Usage Period" */
+    1309,    /* "X509v3 Protocol Restriction" */
     1291,    /* "X509v3 Role Specification Certificate Identifier" */
     1303,    /* "X509v3 Single Use" */
     1297,    /* "X509v3 Source of Authority Identifier" */
       85,    /* "X509v3 Subject Alternative Name" */
+    1310,    /* "X509v3 Subject Alternative Public Key Info" */
      769,    /* "X509v3 Subject Directory Attributes" */
       82,    /* "X509v3 Subject Key Identifier" */
     1294,    /* "X509v3 Time Specification" */
@@ -5090,7 +5114,7 @@ static const unsigned int ln_objs[NUM_LN] = {
      125,    /* "zlib compression" */
 };
 
-#define NUM_OBJ 1165
+#define NUM_OBJ 1171
 static const unsigned int obj_objs[NUM_OBJ] = {
        0,    /* OBJ_undef                        0 */
      181,    /* OBJ_iso                          1 */
@@ -5225,6 +5249,12 @@ static const unsigned int obj_objs[NUM_OBJ] = {
     1305,    /* OBJ_allowed_attribute_assignments 2 5 29 67 */
     1306,    /* OBJ_attribute_mappings           2 5 29 68 */
     1307,    /* OBJ_holder_name_constraints      2 5 29 69 */
+    1308,    /* OBJ_authorization_validation     2 5 29 70 */
+    1309,    /* OBJ_prot_restrict                2 5 29 71 */
+    1310,    /* OBJ_subject_alt_public_key_info  2 5 29 72 */
+    1311,    /* OBJ_alt_signature_algorithm      2 5 29 73 */
+    1312,    /* OBJ_alt_signature_value          2 5 29 74 */
+    1313,    /* OBJ_associated_information       2 5 29 75 */
      513,    /* OBJ_set_ctype                    2 23 42 0 */
      514,    /* OBJ_set_msgExt                   2 23 42 1 */
      515,    /* OBJ_set_attr                     2 23 42 3 */

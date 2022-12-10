@@ -2828,6 +2828,36 @@
 #define NID_holder_name_constraints             1307
 #define OBJ_holder_name_constraints             OBJ_id_ce,69L
 
+#define SN_authorization_validation             "authorizationValidation"
+#define LN_authorization_validation             "X509v3 Authorization Validation"
+#define NID_authorization_validation            1308
+#define OBJ_authorization_validation            OBJ_id_ce,70L
+
+#define SN_prot_restrict                "protRestrict"
+#define LN_prot_restrict                "X509v3 Protocol Restriction"
+#define NID_prot_restrict               1309
+#define OBJ_prot_restrict               OBJ_id_ce,71L
+
+#define SN_subject_alt_public_key_info          "subjectAltPublicKeyInfo"
+#define LN_subject_alt_public_key_info          "X509v3 Subject Alternative Public Key Info"
+#define NID_subject_alt_public_key_info         1310
+#define OBJ_subject_alt_public_key_info         OBJ_id_ce,72L
+
+#define SN_alt_signature_algorithm              "altSignatureAlgorithm"
+#define LN_alt_signature_algorithm              "X509v3 Alternative Signature Algorithm"
+#define NID_alt_signature_algorithm             1311
+#define OBJ_alt_signature_algorithm             OBJ_id_ce,73L
+
+#define SN_alt_signature_value          "altSignatureValue"
+#define LN_alt_signature_value          "X509v3 Alternative Signature Value"
+#define NID_alt_signature_value         1312
+#define OBJ_alt_signature_value         OBJ_id_ce,74L
+
+#define SN_associated_information               "associatedInformation"
+#define LN_associated_information               "X509v3 Associated Information"
+#define NID_associated_information              1313
+#define OBJ_associated_information              OBJ_id_ce,75L
+
 #define SN_anyExtendedKeyUsage          "anyExtendedKeyUsage"
 #define LN_anyExtendedKeyUsage          "Any Extended Key Usage"
 #define NID_anyExtendedKeyUsage         910
