@@ -917,6 +917,18 @@ id-ce 67		: allowedAttributeAssignments		: X509v3 Allowed Attribute Assignments
 id-ce 68		: attributeMappings		: X509v3 Attribute Mappings
 !Cname holder-name-constraints
 id-ce 69		: holderNameConstraints	: X509v3 Holder Name Constraints
+!Cname authorization-validation
+id-ce 70		: authorizationValidation : X509v3 Authorization Validation
+!Cname prot-restrict
+id-ce 71		: protRestrict : X509v3 Protocol Restriction
+!Cname subject-alt-public-key-info
+id-ce 72		: subjectAltPublicKeyInfo : X509v3 Subject Alternative Public Key Info
+!Cname alt-signature-algorithm
+id-ce 73		: altSignatureAlgorithm : X509v3 Alternative Signature Algorithm
+!Cname alt-signature-value
+id-ce 74		: altSignatureValue : X509v3 Alternative Signature Value
+!Cname associated-information
+id-ce 75		: associatedInformation : X509v3 Associated Information
 
 # From RFC5280
 ext-key-usage 0		: anyExtendedKeyUsage	: Any Extended Key Usage
