@@ -1364,7 +1364,7 @@ int ossl_print_gens(BIO *out, GENERAL_NAMES *gens, int indent)
     for (i = 0; i < sk_GENERAL_NAME_num(gens); i++) {
         if (i > 0)
             BIO_puts(out, "\n");
-        BIO_printf(out, "%*s", indent + 2, "");
+        BIO_printf(out, "%*s", indent + 4, "");
         GENERAL_NAME_print(out, sk_GENERAL_NAME_value(gens, i));
     }
     return 1;
