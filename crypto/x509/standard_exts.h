@@ -56,7 +56,6 @@ static const X509V3_EXT_METHOD *standard_exts[] = {
     &ossl_v3_policy_constraints,
     &ossl_v3_targeting_information,
     &ossl_v3_no_rev_avail,
-    &ossl_v3_acc_priv_policies,
 #ifndef OPENSSL_NO_OCSP
     &ossl_v3_crl_hold,
 #endif
@@ -77,14 +76,24 @@ static const X509V3_EXT_METHOD *standard_exts[] = {
     &ossl_v3_issuer_sign_tool,
     &ossl_v3_tls_feature,
     &ossl_v3_ext_admission,
+    &ossl_v3_authority_attribute_identifier,
+    // TODO: roleSpecCertIdentifier
     &ossl_v3_bacons,
     &ossl_v3_delegated_name_constraints,
+    // TODO: timeSpecification
+    // TODO: attributeDescriptor
     &ossl_v3_user_notice,
     &ossl_v3_soa_identifier,
     &ossl_v3_acc_cert_policies,
+    &ossl_v3_acc_priv_policies,
+    // TODO: indirectIssuer
     &ossl_v3_no_assertion,
+    // TODO: issuedOnBehalfOf
     &ossl_v3_single_use,
     &ossl_v3_group_ac,
+    // TODO: allowedAttributeAssignments
+    // TODO: attributeMappings
+    // TODO: holderNameConstraints
     &ossl_v3_associated_info,
 };
 
