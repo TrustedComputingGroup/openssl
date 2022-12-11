@@ -56,6 +56,7 @@ static const X509V3_EXT_METHOD *standard_exts[] = {
     &ossl_v3_policy_constraints,
     &ossl_v3_targeting_information,
     &ossl_v3_no_rev_avail,
+    &ossl_v3_acc_priv_policies,
 #ifndef OPENSSL_NO_OCSP
     &ossl_v3_crl_hold,
 #endif
@@ -80,6 +81,7 @@ static const X509V3_EXT_METHOD *standard_exts[] = {
     &ossl_v3_delegated_name_constraints,
     &ossl_v3_user_notice,
     &ossl_v3_soa_identifier,
+    &ossl_v3_acc_cert_policies,
     &ossl_v3_no_assertion,
     &ossl_v3_single_use,
     &ossl_v3_group_ac,
