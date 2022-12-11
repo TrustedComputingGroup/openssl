@@ -274,6 +274,13 @@ typedef struct USERNOTICE_st {
     ASN1_STRING *exptext;
 } USERNOTICE;
 
+typedef STACK_OF(USERNOTICE) USER_NOTICE_SYNTAX;
+DECLARE_ASN1_FUNCTIONS(USER_NOTICE_SYNTAX)
+
+{-
+    generate_stack_macros("USERNOTICE");
+-}
+
 typedef struct POLICYQUALINFO_st {
     ASN1_OBJECT *pqualid;
     union {
