@@ -69,7 +69,7 @@ static int i2r_ATTRIBUTES_SYNTAX(X509V3_EXT_METHOD *method,
             return 0;
         if (attr_nid == NID_undef) {
             i2a_ASN1_OBJECT(out, attr_obj);
-            BIO_printf(out, ":\n");
+            BIO_puts(out, ":\n");
         } else {
             BIO_printf(out, "%s:\n", OBJ_nid2ln(attr_nid));
         }
@@ -81,7 +81,7 @@ static int i2r_ATTRIBUTES_SYNTAX(X509V3_EXT_METHOD *method,
                 if (BIO_printf(out, "%*s", indent + 4, "") <= 0)
                     return 0;
                 print_attribute_value(out, attr_nid, av);
-                BIO_printf(out, "\n");
+                BIO_puts(out, "\n");
             }
         } else {
             if (BIO_printf(out, "%*s<No Values>\n", indent + 4, "") <= 0)

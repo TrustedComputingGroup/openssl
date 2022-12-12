@@ -8,8 +8,8 @@
  */
 
 static ASN1_ITEM_EXP *asn1_item_list[] = {
-    ASN1_ITEM_ref(TARGETING_INFORMATION),
     ASN1_ITEM_ref(ACCESS_DESCRIPTION),
+    ASN1_ITEM_ref(ALLOWED_ATTRIBUTES_ITEM),
 #ifndef OPENSSL_NO_RFC3779
     ASN1_ITEM_ref(ASIdOrRange),
     ASN1_ITEM_ref(ASIdentifierChoice),
@@ -80,6 +80,7 @@ static ASN1_ITEM_EXP *asn1_item_list[] = {
     ASN1_ITEM_ref(IPAddressOrRange),
     ASN1_ITEM_ref(IPAddressRange),
 #endif
+    ASN1_ITEM_ref(ISSUER_SIGN_TOOL),
     ASN1_ITEM_ref(ISSUING_DIST_POINT),
 #ifndef OPENSSL_NO_DEPRECATED_3_0
     ASN1_ITEM_ref(LONG),
@@ -148,7 +149,7 @@ static ASN1_ITEM_EXP *asn1_item_list[] = {
 #endif
     ASN1_ITEM_ref(SXNETID),
     ASN1_ITEM_ref(SXNET),
-    ASN1_ITEM_ref(ISSUER_SIGN_TOOL),
+    ASN1_ITEM_ref(TARGETING_INFORMATION),
     ASN1_ITEM_ref(USERNOTICE),
     ASN1_ITEM_ref(USER_NOTICE_SYNTAX),
     ASN1_ITEM_ref(X509_ACERT),
