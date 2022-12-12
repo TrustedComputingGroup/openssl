@@ -130,7 +130,7 @@ void print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
 
     case V_ASN1_INTEGER:
     case V_ASN1_ENUMERATED:
-        str = (ASN1_STRING *)&(av->value);
+        str = av->value.integer;
         ASN1_INTEGER_print_bio(out, str);
         break;
 
