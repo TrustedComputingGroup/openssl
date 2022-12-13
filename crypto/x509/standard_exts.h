@@ -81,7 +81,7 @@ static const X509V3_EXT_METHOD *standard_exts[] = {
     &ossl_v3_bacons,
     &ossl_v3_delegated_name_constraints,
     // TODO: timeSpecification
-    // TODO: attributeDescriptor
+    &ossl_v3_attribute_descriptor,
     &ossl_v3_user_notice,
     &ossl_v3_soa_identifier,
     &ossl_v3_acc_cert_policies,
