@@ -43,3 +43,4 @@ extern const X509V3_EXT_METHOD ossl_v3_authority_attribute_identifier;
 extern const X509V3_EXT_METHOD ossl_v3_issued_on_behalf_of;
 extern const X509V3_EXT_METHOD ossl_v3_allowed_attribute_assignments;
 extern const X509V3_EXT_METHOD ossl_v3_attribute_mappings;
+extern const X509V3_EXT_METHOD ossl_v3_holder_name_constraints;
