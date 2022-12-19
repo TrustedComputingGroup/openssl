@@ -334,36 +334,6 @@ static int i2r_aaidp(const X509V3_EXT_METHOD *method, AA_DIST_POINT *dp, BIO *ou
     return 1;
 }
 
-// // TODO: Refactor into separate module, because this came from `v3_crld.c`.
-// /* Append any nameRelativeToCRLIssuer in dpn to iname, set in dpn->dpname */
-// static int DIST_POINT_set_dpname(DIST_POINT_NAME *dpn, const X509_NAME *iname)
-// {
-//     int i;
-//     STACK_OF(X509_NAME_ENTRY) *frag;
-//     X509_NAME_ENTRY *ne;
-
-//     if (dpn == NULL || dpn->type != 1)
-//         return 1;
-//     frag = dpn->name.relativename;
-//     X509_NAME_free(dpn->dpname); /* just in case it was already set */
-//     dpn->dpname = X509_NAME_dup(iname);
-//     if (dpn->dpname == NULL)
-//         return 0;
-//     for (i = 0; i < sk_X509_NAME_ENTRY_num(frag); i++) {
-//         ne = sk_X509_NAME_ENTRY_value(frag, i);
-//         if (!X509_NAME_add_entry(dpn->dpname, ne, -1, i ? 0 : 1))
-//             goto err;
-//     }
-//     /* generate cached encoding of name */
-//     if (i2d_X509_NAME(dpn->dpname, NULL) >= 0)
-//         return 1;
-
-//  err:
-//     X509_NAME_free(dpn->dpname);
-//     dpn->dpname = NULL;
-//     return 0;
-// }
-
 const X509V3_EXT_METHOD ossl_v3_aa_issuing_dist_point = {
     NID_id_aa_issuing_distribution_point, 0, ASN1_ITEM_ref(AA_DIST_POINT),
     0, 0, 0, 0,
