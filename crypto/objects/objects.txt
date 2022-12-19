@@ -905,6 +905,8 @@ id-ce 57		: acceptablePrivPolicies	: X509v3 Acceptable Privilege Policies
 id-ce 61		: indirectIssuer			: X509v3 Indirect Issuer
 !Cname no-assertion
 id-ce 62        : noAssertion       : X509v3 No Assertion
+!Cname id-aa-issuing-distribution-point
+id-ce 63		: aAissuingDistributionPoint : X509v3 Attribute Authority Issuing Distribution Point
 !Cname issued-on-behalf-of
 id-ce 64		: issuedOnBehalfOf	: X509v3 Issued On Behalf Of
 !Cname single-use

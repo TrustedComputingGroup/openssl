@@ -95,6 +95,7 @@ static const X509V3_EXT_METHOD *standard_exts[] = {
     &ossl_v3_attribute_mappings,
     &ossl_v3_holder_name_constraints,
     &ossl_v3_associated_info,
+    &ossl_v3_aa_issuing_dist_point,
 };
 
 /* Number of standard extensions */

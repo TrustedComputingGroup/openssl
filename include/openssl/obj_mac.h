@@ -2798,6 +2798,11 @@
 #define NID_no_assertion                1301
 #define OBJ_no_assertion                OBJ_id_ce,62L
 
+#define SN_id_aa_issuing_distribution_point             "aAissuingDistributionPoint"
+#define LN_id_aa_issuing_distribution_point             "X509v3 Attribute Authority Issuing Distribution Point"
+#define NID_id_aa_issuing_distribution_point            1314
+#define OBJ_id_aa_issuing_distribution_point            OBJ_id_ce,63L
+
 #define SN_issued_on_behalf_of          "issuedOnBehalfOf"
 #define LN_issued_on_behalf_of          "X509v3 Issued On Behalf Of"
 #define NID_issued_on_behalf_of         1302
