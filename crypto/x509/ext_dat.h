@@ -47,3 +47,4 @@ extern const X509V3_EXT_METHOD ossl_v3_holder_name_constraints;
 extern const X509V3_EXT_METHOD ossl_v3_indirect_issuer;
 extern const X509V3_EXT_METHOD ossl_v3_attribute_descriptor;
 extern const X509V3_EXT_METHOD ossl_v3_aa_issuing_dist_point;
+extern const X509V3_EXT_METHOD ossl_v3_role_spec_cert_identifier;

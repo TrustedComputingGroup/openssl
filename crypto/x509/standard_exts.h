@@ -77,7 +77,7 @@ static const X509V3_EXT_METHOD *standard_exts[] = {
     &ossl_v3_tls_feature,
     &ossl_v3_ext_admission,
     &ossl_v3_authority_attribute_identifier,
-    // TODO: roleSpecCertIdentifier
+    &ossl_v3_role_spec_cert_identifier,
     &ossl_v3_bacons,
     &ossl_v3_delegated_name_constraints,
     // TODO: timeSpecification

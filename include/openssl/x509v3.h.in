@@ -1207,6 +1207,22 @@ typedef struct AA_DIST_POINT_st {
     ASN1_BOOLEAN containsSOAPublicKeyCerts;
 } AA_DIST_POINT;
 
+typedef struct ROLE_SPEC_CERT_ID_st {
+    GENERAL_NAME *roleName;
+    GENERAL_NAME *roleCertIssuer;
+    ASN1_INTEGER *roleCertSerialNumber;
+    GENERAL_NAMES *roleCertLocator;
+} ROLE_SPEC_CERT_ID;
+
+DECLARE_ASN1_FUNCTIONS(ROLE_SPEC_CERT_ID)
+{-
+    generate_stack_macros("ROLE_SPEC_CERT_ID");
+-}
+
+typedef STACK_OF(ROLE_SPEC_CERT_ID) ROLE_SPEC_CERT_ID_SYNTAX;
+
+DECLARE_ASN1_FUNCTIONS(ROLE_SPEC_CERT_ID_SYNTAX)
+
 # ifdef  __cplusplus
 }
 # endif
