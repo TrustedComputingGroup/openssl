@@ -1311,3 +1311,4 @@ subject_alt_public_key_info		1310
 alt_signature_algorithm		1311
 alt_signature_value		1312
 associated_information		1313
+id_aa_issuing_distribution_point		1314

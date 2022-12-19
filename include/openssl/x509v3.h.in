@@ -1167,8 +1167,8 @@ typedef struct INFO_SYNTAX_POINTER_st {
     HASH *hash;
 } INFO_SYNTAX_POINTER;
 
-#define INFO_SYNTAX_TYPE_CONTENT 0;
-#define INFO_SYNTAX_TYPE_POINTER 1;
+#define INFO_SYNTAX_TYPE_CONTENT 0
+#define INFO_SYNTAX_TYPE_POINTER 1
 
 typedef struct INFO_SYNTAX_st {
     int type;
@@ -1196,6 +1196,16 @@ DECLARE_ASN1_FUNCTIONS(INFO_SYNTAX_POINTER)
 DECLARE_ASN1_FUNCTIONS(INFO_SYNTAX)
 DECLARE_ASN1_FUNCTIONS(PRIVILEGE_POLICY_ID)
 DECLARE_ASN1_FUNCTIONS(ATTRIBUTE_DESCRIPTOR)
+
+typedef struct AA_DIST_POINT_st {
+    DIST_POINT_NAME *distpoint;
+    ASN1_BIT_STRING *reasons;
+    int dp_reasons;
+    ASN1_BOOLEAN indirectCRL;
+    ASN1_BOOLEAN containsUserAttributeCerts;
+    ASN1_BOOLEAN containsAACerts;
+    ASN1_BOOLEAN containsSOAPublicKeyCerts;
+} AA_DIST_POINT;
 
 # ifdef  __cplusplus
 }

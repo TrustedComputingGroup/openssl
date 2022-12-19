@@ -182,7 +182,7 @@ static int print_reasons(BIO *out, const char *rname,
 {
     int first = 1;
     const BIT_STRING_BITNAME *pbn;
-    BIO_printf(out, "%*s%s:\n%*s", indent, "", rname, indent + 2, "");
+    BIO_printf(out, "%*s%s:\n%*s", indent, "", rname, indent + 4, "");
     for (pbn = reason_flags; pbn->lname; pbn++) {
         if (ASN1_BIT_STRING_get_bit(rflags, pbn->bitnum)) {
             if (first)
@@ -418,10 +418,11 @@ static int print_distpoint(BIO *out, DIST_POINT_NAME *dpn, int indent)
     if (dpn->type == 0) {
         BIO_printf(out, "%*sFull Name:\n", indent, "");
         ossl_print_gens(out, dpn->name.fullname, indent);
+        BIO_puts(out, "\n");
     } else {
         X509_NAME ntmp;
         ntmp.entries = dpn->name.relativename;
-        BIO_printf(out, "%*sRelative Name:\n%*s", indent, "", indent + 2, "");
+        BIO_printf(out, "%*sRelative Name:\n%*s", indent, "", indent + 4, "");
         X509_NAME_print_ex(out, &ntmp, 0, XN_FLAG_ONELINE);
         BIO_puts(out, "\n");
     }
