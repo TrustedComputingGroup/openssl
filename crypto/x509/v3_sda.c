@@ -7,37 +7,8 @@
  * https://www.openssl.org/source/license.html
  */
 
-#include <stdio.h>
-#include "internal/cryptlib.h"
 #include <openssl/asn1t.h>
-#include <openssl/conf.h>
 #include <openssl/x509v3.h>
-#include "ext_dat.h"
-#include <openssl/pkcs12.h>
-
-static int i2r_ATTRIBUTES_SYNTAX(X509V3_EXT_METHOD *method,
-                                 ATTRIBUTES_SYNTAX *attrlst,
-                                 BIO *out, int indent);
-
-const X509V3_EXT_METHOD ossl_v3_subj_dir_attrs = {
-    NID_subject_directory_attributes, 0,
-    ASN1_ITEM_ref(ATTRIBUTES_SYNTAX),
-    0, 0, 0, 0,
-    0, 0, 0, 0,
-    (X509V3_EXT_I2R)i2r_ATTRIBUTES_SYNTAX,
-    0,
-    NULL
-};
-
-const X509V3_EXT_METHOD ossl_v3_associated_info = {
-    NID_associated_information, 0,
-    ASN1_ITEM_ref(ATTRIBUTES_SYNTAX),
-    0, 0, 0, 0,
-    0, 0, 0, 0,
-    (X509V3_EXT_I2R)i2r_ATTRIBUTES_SYNTAX,
-    0,
-    NULL
-};
 
 ASN1_ITEM_TEMPLATE(ATTRIBUTES_SYNTAX) =
         ASN1_EX_TEMPLATE_TYPE(ASN1_TFLG_SEQUENCE_OF, 0, Attributes, X509_ATTRIBUTE)
@@ -90,3 +61,23 @@ static int i2r_ATTRIBUTES_SYNTAX(X509V3_EXT_METHOD *method,
     }
     return 1;
 }
+
+const X509V3_EXT_METHOD ossl_v3_subj_dir_attrs = {
+    NID_subject_directory_attributes, X509V3_EXT_MULTILINE,
+    ASN1_ITEM_ref(ATTRIBUTES_SYNTAX),
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    (X509V3_EXT_I2R)i2r_ATTRIBUTES_SYNTAX,
+    0,
+    NULL
+};
+
+const X509V3_EXT_METHOD ossl_v3_associated_info = {
+    NID_associated_information, X509V3_EXT_MULTILINE,
+    ASN1_ITEM_ref(ATTRIBUTES_SYNTAX),
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    (X509V3_EXT_I2R)i2r_ATTRIBUTES_SYNTAX,
+    0,
+    NULL
+};

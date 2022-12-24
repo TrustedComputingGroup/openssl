@@ -7,12 +7,8 @@
  * https://www.openssl.org/source/license.html
  */
 
-#include <stdio.h>
-#include "internal/cryptlib.h"
 #include <openssl/asn1t.h>
-#include <openssl/conf.h>
 #include <openssl/x509v3.h>
-#include "ext_dat.h"
 
 int i2r_ISSUER_SERIAL(X509V3_EXT_METHOD *method,
                       ISSUER_SERIAL *iss,

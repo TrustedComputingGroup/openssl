@@ -7,14 +7,8 @@
  * https://www.openssl.org/source/license.html
  */
 
-#include <stdio.h>
-#include "internal/cryptlib.h"
-#include <openssl/asn1.h>
 #include <openssl/asn1t.h>
-#include <openssl/conf.h>
 #include <openssl/x509v3.h>
-#include "ext_dat.h"
-#include "x509_local.h"
 
 
 ASN1_ITEM_TEMPLATE(USER_NOTICE_SYNTAX) =

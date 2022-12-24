@@ -7,11 +7,8 @@
  * https://www.openssl.org/source/license.html
  */
 
-#include <stdio.h>
-#include "internal/cryptlib.h"
 #include <openssl/asn1t.h>
 #include <openssl/x509v3.h>
-#include "ext_dat.h"
 
 ASN1_SEQUENCE(ATAV) = {
     ASN1_SIMPLE(ATAV, type, ASN1_OBJECT),

@@ -7,11 +7,8 @@
  * https://www.openssl.org/source/license.html
  */
 
-#include <stdio.h>
-#include "internal/cryptlib.h"
 #include <openssl/asn1t.h>
 #include <openssl/x509v3.h>
-#include "ext_dat.h"
 
 IMPLEMENT_ASN1_FUNCTIONS(ALLOWED_ATTRIBUTES_SYNTAX)
 

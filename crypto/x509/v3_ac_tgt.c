@@ -7,19 +7,10 @@
  * https://www.openssl.org/source/license.html
  */
 
-#include <stdio.h>
 #include "internal/cryptlib.h"
-#include <openssl/asn1.h>
 #include <openssl/asn1t.h>
-#include <openssl/conf.h>
 #include <openssl/x509v3.h>
-#include "ext_dat.h"
-#include "x509_local.h"
-#include "crypto/asn1.h"
 
-static int i2r_OBJECT_DIGEST_INFO(X509V3_EXT_METHOD *method,
-                                  OBJECT_DIGEST_INFO *odi,
-                                  BIO *out, int indent);
 static int i2r_TARGET_CERT(X509V3_EXT_METHOD *method,
                            TARGET_CERT *tc,
                            BIO *out, int indent);

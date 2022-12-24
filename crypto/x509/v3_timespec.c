@@ -8,13 +8,8 @@
  */
 
 #include <stdio.h>
-#include "internal/cryptlib.h"
-#include <openssl/asn1.h>
 #include <openssl/asn1t.h>
-#include <openssl/conf.h>
 #include <openssl/x509v3.h>
-#include "ext_dat.h"
-#include "x509_local.h"
 
 ASN1_SEQUENCE(TIME_SPEC_ABSOLUTE) = {
     ASN1_EXP_OPT(TIME_SPEC_ABSOLUTE, startTime, ASN1_GENERALIZEDTIME, 0),

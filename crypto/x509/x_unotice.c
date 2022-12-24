@@ -1,5 +1,3 @@
-#include <openssl/asn1.h>
-#include <openssl/asn1t.h>
 #include <openssl/x509v3.h>
 
 void print_notice(BIO *out, USERNOTICE *notice, int indent)
