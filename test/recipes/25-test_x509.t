@@ -16,7 +16,7 @@ use OpenSSL::Test qw/:DEFAULT srctop_file/;
 
 setup("test_x509");
 
-plan tests => 69;
+plan tests => 110;
 
 # Prevent MSys2 filename munging for arguments that look like file paths but
 # aren't
@@ -242,6 +242,148 @@ cert_contains($user_notice_cert,
               "Explicit Text: Ice ice baby",
               1, 'X509v3 User Notice');
 
+my $auth_attr_id_cert = srctop_file(@certs, "ext-authorityAttributeIdentifier.pem");
+cert_contains($auth_attr_id_cert,
+              "DirName:CN = Wildboar",
+              1, 'X509v3 Authority Attribute Identifier');
+cert_contains($auth_attr_id_cert,
+              "Issuer Serial: 01030507",
+              1, 'X509v3 Authority Attribute Identifier');
+cert_contains($auth_attr_id_cert,
+              "Issuer UID: B2",
+              1, 'X509v3 Authority Attribute Identifier');
+
+my $iobo_cert = srctop_file(@certs, "ext-issuedOnBehalfOf.pem");
+cert_contains($iobo_cert,
+              "DirName:CN = Wildboar",
+              1, 'X509v3 Issued On Behalf Of');
+
+my $aaa_cert = srctop_file(@certs, "ext-allowedAttributeAssignments.pem");
+cert_contains($aaa_cert,
+              "Attribute Type: commonName",
+              1, 'X509v3 Allowed Attribute Assignments');
+cert_contains($aaa_cert,
+              "Holder Domain: email:jonathan",
+              1, 'X509v3 Allowed Attribute Assignments');
+
+my $attr_map_cert = srctop_file(@certs, "ext-attributeMappings.pem");
+cert_contains($attr_map_cert,
+              "commonName == localityName",
+              1, 'X509v3 Attribute Mappings');
+cert_contains($attr_map_cert,
+              "asdf == 0x033E",
+              1, 'X509v3 Attribute Mappings');
+
+my $indirect_issuer_cert = srctop_file(@certs, "ext-indirectIssuer.pem");
+cert_contains($indirect_issuer_cert,
+              "NULL",
+              1, 'X509v3 Indirect Issuer');
+
+my $attr_desc_cert = srctop_file(@certs, "ext-attributeDescriptor.pem");
+cert_contains($attr_desc_cert,
+              "Identifier: commonName",
+              1, 'X509v3 Attribute Descriptor');
+cert_contains($attr_desc_cert,
+              "Syntax: UnboundedDirectoryString",
+              1, 'X509v3 Attribute Descriptor');
+cert_contains($attr_desc_cert,
+              "Name: commonName",
+              1, 'X509v3 Attribute Descriptor');
+cert_contains($attr_desc_cert,
+              "Description: A general-purpose name",
+              1, 'X509v3 Attribute Descriptor');
+cert_contains($attr_desc_cert,
+              "Identifier: organizationName",
+              1, 'X509v3 Attribute Descriptor');
+cert_contains($attr_desc_cert,
+              "DirName:CN = Wild",
+              1, 'X509v3 Attribute Descriptor');
+cert_contains($attr_desc_cert,
+              "Algorithm: sha256",
+              1, 'X509v3 Attribute Descriptor');
+cert_contains($attr_desc_cert,
+              "Hash Value:",
+              1, 'X509v3 Attribute Descriptor');
+
+my $aa_idp_cert = srctop_file(@certs, "ext-aAissuingDistributionPoint.pem");
+cert_contains($aa_idp_cert,
+              "DirName:CN = Wild",
+              1, 'X509v3 Attribute Authority Issuing Distribution Point');
+cert_contains($aa_idp_cert,
+              "CA Compromise",
+              1, 'X509v3 Attribute Authority Issuing Distribution Point');
+cert_contains($aa_idp_cert,
+              "Indirect CRL: TRUE",
+              1, 'X509v3 Attribute Authority Issuing Distribution Point');
+cert_contains($aa_idp_cert,
+              "Contains User Attribute Certificates: TRUE",
+              1, 'X509v3 Attribute Authority Issuing Distribution Point');
+cert_contains($aa_idp_cert,
+              'Contains Attribute Authority \(AA\) Certificates: TRUE',
+              1, 'X509v3 Attribute Authority Issuing Distribution Point');
+cert_contains($aa_idp_cert,
+              'Contains Source Of Authority \(SOA\) Public Key Certificates: TRUE',
+              1, 'X509v3 Attribute Authority Issuing Distribution Point');
+
+my $role_spec_cert = srctop_file(@certs, "ext-roleSpecCertIdentifier.pem");
+cert_contains($role_spec_cert,
+              "Role Specification Certificate Identifier #1",
+              1, 'X509v3 Role Specification Certificate Identifier');
+cert_contains($role_spec_cert,
+              "Role Name: DirName:CN = Wild",
+              1, 'X509v3 Role Specification Certificate Identifier');
+cert_contains($role_spec_cert,
+              "Role Certificate Issuer: DirName:CN = Wild",
+              1, 'X509v3 Role Specification Certificate Identifier');
+cert_contains($role_spec_cert,
+              "Role Certificate Serial Number: 0x02040608",
+              1, 'X509v3 Role Specification Certificate Identifier');
+cert_contains($role_spec_cert,
+              "DNS:wildboar",
+              1, 'X509v3 Role Specification Certificate Identifier');
+cert_contains($role_spec_cert,
+              "Registered ID:description",
+              1, 'X509v3 Role Specification Certificate Identifier');
+
+my $time_spec_abs_cert = srctop_file(@certs, "ext-timeSpecification-absolute.pem");
+cert_contains($time_spec_abs_cert,
+              "UTC Offset: -5",
+              1, 'X509v3 Time Specification');
+cert_contains($time_spec_abs_cert,
+              "Absolute: Any time between 20221220130721Z and 20221220130721Z",
+              1, 'X509v3 Time Specification');
+
+my $time_spec_per_cert = srctop_file(@certs, "ext-timeSpecification-periodic.pem");
+cert_contains($time_spec_per_cert,
+              "UTC Offset: -5",
+              1, 'X509v3 Time Specification');
+cert_contains($time_spec_per_cert,
+              "NOT this time:",
+              1, 'X509v3 Time Specification');
+cert_contains($time_spec_per_cert,
+              "05:43:21 - 12:34:56",
+              1, 'X509v3 Time Specification');
+cert_contains($time_spec_per_cert,
+              "Days: SUN, MON",
+              1, 'X509v3 Time Specification');
+cert_contains($time_spec_per_cert,
+              "Weeks: 3, 4",
+              1, 'X509v3 Time Specification');
+cert_contains($time_spec_per_cert,
+              "Months: MAY, JUN",
+              1, 'X509v3 Time Specification');
+cert_contains($time_spec_per_cert,
+              "Years: 2022, 2023",
+              1, 'X509v3 Time Specification');
+cert_contains($time_spec_per_cert,
+              "Days: 3, 4",
+              1, 'X509v3 Time Specification');
+cert_contains($time_spec_per_cert,
+              "Months: JUL, AUG",
+              1, 'X509v3 Time Specification');
+cert_contains($time_spec_per_cert,
+              "Years: 2023, 2024",
+              1, 'X509v3 Time Specification');
 
 sub test_errors { # actually tests diagnostics of OSSL_STORE
     my ($expected, $cert, @opts) = @_;
