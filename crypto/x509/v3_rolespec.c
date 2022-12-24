@@ -93,7 +93,7 @@ static int i2r_ROLE_SPEC_CERT_ID_SYNTAX(X509V3_EXT_METHOD *method,
 }
 
 const X509V3_EXT_METHOD ossl_v3_role_spec_cert_identifier = {
-    NID_role_spec_cert_identifier, 0,
+    NID_role_spec_cert_identifier, X509V3_EXT_MULTILINE,
     ASN1_ITEM_ref(ROLE_SPEC_CERT_ID_SYNTAX),
     0, 0, 0, 0,
     0, 0,

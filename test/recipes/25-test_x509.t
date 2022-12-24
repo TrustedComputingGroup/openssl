@@ -16,7 +16,7 @@ use OpenSSL::Test qw/:DEFAULT srctop_file/;
 
 setup("test_x509");
 
-plan tests => 110;
+plan tests => 114;
 
 # Prevent MSys2 filename munging for arguments that look like file paths but
 # aren't
@@ -281,7 +281,7 @@ cert_contains($indirect_issuer_cert,
 
 my $attr_desc_cert = srctop_file(@certs, "ext-attributeDescriptor.pem");
 cert_contains($attr_desc_cert,
-              "Identifier: commonName",
+              "Identifier: 2.5.4.3",
               1, 'X509v3 Attribute Descriptor');
 cert_contains($attr_desc_cert,
               "Syntax: UnboundedDirectoryString",
@@ -293,7 +293,7 @@ cert_contains($attr_desc_cert,
               "Description: A general-purpose name",
               1, 'X509v3 Attribute Descriptor');
 cert_contains($attr_desc_cert,
-              "Identifier: organizationName",
+              "Identifier: 2.5.4.10",
               1, 'X509v3 Attribute Descriptor');
 cert_contains($attr_desc_cert,
               "DirName:CN = Wild",
@@ -347,15 +347,15 @@ cert_contains($role_spec_cert,
 
 my $time_spec_abs_cert = srctop_file(@certs, "ext-timeSpecification-absolute.pem");
 cert_contains($time_spec_abs_cert,
-              "UTC Offset: -5",
+              "Timezone: UTC-05:00",
               1, 'X509v3 Time Specification');
 cert_contains($time_spec_abs_cert,
-              "Absolute: Any time between 20221220130721Z and 20221220130721Z",
+              "Absolute: Any time between Dec 20 13:07:21 2022 GMT and Dec 20 13:07:21 2022 GMT",
               1, 'X509v3 Time Specification');
 
 my $time_spec_per_cert = srctop_file(@certs, "ext-timeSpecification-periodic.pem");
 cert_contains($time_spec_per_cert,
-              "UTC Offset: -5",
+              "Timezone: UTC-05:00",
               1, 'X509v3 Time Specification');
 cert_contains($time_spec_per_cert,
               "NOT this time:",
@@ -364,10 +364,10 @@ cert_contains($time_spec_per_cert,
               "05:43:21 - 12:34:56",
               1, 'X509v3 Time Specification');
 cert_contains($time_spec_per_cert,
-              "Days: SUN, MON",
+              "Days of the week: SUN, MON",
               1, 'X509v3 Time Specification');
 cert_contains($time_spec_per_cert,
-              "Weeks: 3, 4",
+              "Weeks of the month: 3, 4",
               1, 'X509v3 Time Specification');
 cert_contains($time_spec_per_cert,
               "Months: MAY, JUN",
@@ -376,13 +376,25 @@ cert_contains($time_spec_per_cert,
               "Years: 2022, 2023",
               1, 'X509v3 Time Specification');
 cert_contains($time_spec_per_cert,
-              "Days: 3, 4",
+              "Days of the month: 3, 4",
               1, 'X509v3 Time Specification');
 cert_contains($time_spec_per_cert,
               "Months: JUL, AUG",
               1, 'X509v3 Time Specification');
 cert_contains($time_spec_per_cert,
               "Years: 2023, 2024",
+              1, 'X509v3 Time Specification');
+cert_contains($time_spec_per_cert,
+              "Years: 2023, 2024",
+              1, 'X509v3 Time Specification');
+cert_contains($time_spec_per_cert,
+              "Days: THIRD TUE, WED",
+              1, 'X509v3 Time Specification');
+cert_contains($time_spec_per_cert,
+              "Months: ALL",
+              1, 'X509v3 Time Specification');
+cert_contains($time_spec_per_cert,
+              "Years: 2024, 2025",
               1, 'X509v3 Time Specification');
 
 sub test_errors { # actually tests diagnostics of OSSL_STORE

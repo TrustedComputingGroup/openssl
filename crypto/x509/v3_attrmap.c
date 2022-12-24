@@ -88,7 +88,7 @@ static int i2r_ATTRIBUTE_MAPPINGS(X509V3_EXT_METHOD *method,
 }
 
 const X509V3_EXT_METHOD ossl_v3_attribute_mappings = {
-    NID_attribute_mappings, 0,
+    NID_attribute_mappings, X509V3_EXT_MULTILINE,
     ASN1_ITEM_ref(ATTRIBUTE_MAPPINGS),
     0, 0, 0, 0,
     0, 0,

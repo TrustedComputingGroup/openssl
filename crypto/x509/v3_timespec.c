@@ -90,20 +90,34 @@ static int i2r_TIME_SPEC_ABSOLUTE(X509V3_EXT_METHOD *method,
                                   TIME_SPEC_ABSOLUTE *time,
                                   BIO *out, int indent)
 {
-    if (
-        time->startTime != NULL
-        && time->endTime != NULL
-    ) {
-        BIO_puts(out, "Any time between ");
-        BIO_printf(out, "%.*s", time->startTime->length, time->startTime->data);
-        BIO_puts(out, " and ");
-        BIO_printf(out, "%.*s", time->endTime->length, time->endTime->data);
+    if (time->startTime != NULL && time->endTime != NULL) {
+        if (!BIO_puts(out, "Any time between ")) {
+            return 0;
+        }
+        if (!ossl_asn1_time_print_ex(out, time->startTime, 0)) {
+            return 0;
+        }
+        if (!BIO_puts(out, " and ")) {
+            return 0;
+        }
+        if (!ossl_asn1_time_print_ex(out, time->endTime, 0)) {
+            return 0;
+        }
     } else if (time->startTime != NULL) {
-        BIO_puts(out, "Any time After ");
+        if (!BIO_puts(out, "Any time after ")) {
+            return 0;
+        }
+        if (!ossl_asn1_time_print_ex(out, time->startTime, 0)) {
+            return 0;
+        }
         BIO_printf(out, "%.*s", time->startTime->length, time->startTime->data);
     } else if (time->endTime != NULL) {
-        BIO_puts(out, "Any time until ");
-        BIO_printf(out, "%.*s", time->endTime->length, time->endTime->data);
+        if (!BIO_puts(out, "Any time until ")) {
+            return 0;
+        }
+        if (!ossl_asn1_time_print_ex(out, time->endTime, 0)) {
+            return 0;
+        }
     } else { // Invalid: there must be SOME time specified.
         return BIO_puts(out, "INVALID (EMPTY)");
     }
@@ -440,7 +454,7 @@ static int print_int_named_day (BIO *out, int64_t nd) {
 }
 
 static int print_bit_named_day (BIO *out, ASN1_BIT_STRING *bs) {
-    int i;
+    int i = 0;
     if (ASN1_BIT_STRING_get_bit(bs, NAMED_DAY_BIT_SUN)) {
         if (i > 0 && !BIO_puts(out, ", ")) {
             return 0;
@@ -531,9 +545,26 @@ static int i2r_PERIOD(X509V3_EXT_METHOD *method,
         }
     }
     if (p->days) {
-        if (!BIO_printf(out, "%*sDays: ", indent + 4, "")) {
-            return 0;
+        if (p->days->type == TIME_SPEC_DAY_TYPE_INT) {
+            if (p->weeks != NULL) {
+                if (!BIO_printf(out, "%*sDays of the week: ", indent + 4, "")) {
+                    return 0;
+                }
+            } else if (p->months != NULL) {
+                if (!BIO_printf(out, "%*sDays of the month: ", indent + 4, "")) {
+                    return 0;
+                }
+            } else if (p->years != NULL) {
+                if (!BIO_printf(out, "%*sDays of the year: ", indent + 4, "")) {
+                    return 0;
+                }
+            }
+        } else {
+            if (!BIO_printf(out, "%*sDays: ", indent + 4, "")) {
+                return 0;
+            }
         }
+
         switch (p->days->type) {
             case (TIME_SPEC_DAY_TYPE_INT): {
                 for (i = 0; i < sk_ASN1_INTEGER_num(p->days->choice.intDay); i++) {
@@ -633,9 +664,22 @@ static int i2r_PERIOD(X509V3_EXT_METHOD *method,
         }
     }
     if (p->weeks) {
-        if (!BIO_printf(out, "%*sWeeks: ", indent + 4, "")) {
-            return 0;
+        if (p->weeks->type == TIME_SPEC_WEEKS_TYPE_INT) {
+            if (p->months != NULL) {
+                if (!BIO_printf(out, "%*sWeeks of the month: ", indent + 4, "")) {
+                    return 0;
+                }
+            } else if (p->years != NULL) {
+                if (!BIO_printf(out, "%*sWeeks of the year: ", indent + 4, "")) {
+                    return 0;
+                }
+            }
+        } else {
+            if (!BIO_printf(out, "%*sWeeks: ", indent + 4, "")) {
+                return 0;
+            }
         }
+
         switch (p->weeks->type) {
             case (TIME_SPEC_WEEKS_TYPE_ALL): {
                 if (!BIO_puts(out, "ALL")) {
@@ -777,7 +821,7 @@ static int i2r_TIME_SPEC(X509V3_EXT_METHOD *method,
         if (ASN1_INTEGER_get_int64(&tz, time->timeZone) != 1) {
             return 0;
         }
-        BIO_printf(out, "%*sUTC Offset: %+ld\n", indent, "", tz);
+        BIO_printf(out, "%*sTimezone: UTC%+03ld:00\n", indent, "", tz);
     }
     if (time->notThisTime > 0) {
         BIO_printf(out, "%*sNOT this time:\n", indent, "");
@@ -788,7 +832,7 @@ static int i2r_TIME_SPEC(X509V3_EXT_METHOD *method,
 }
 
 const X509V3_EXT_METHOD ossl_v3_time_specification = {
-    NID_time_specification, 0,
+    NID_time_specification, X509V3_EXT_MULTILINE,
     ASN1_ITEM_ref(TIME_SPEC),
     0, 0, 0, 0,
     0, 0,
