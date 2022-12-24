@@ -46,48 +46,6 @@ ASN1_SEQUENCE(ATTRIBUTE_DESCRIPTOR) = {
 
 IMPLEMENT_ASN1_FUNCTIONS(ATTRIBUTE_DESCRIPTOR)
 
-// static STACK_OF(CONF_VALUE) *i2v_BASIC_ATTR_CONSTRAINTS(X509V3_EXT_METHOD *method,
-//                                                    BASIC_ATTR_CONSTRAINTS *bcons,
-//                                                    STACK_OF(CONF_VALUE)
-//                                                    *extlist)
-// {
-//     X509V3_add_value_bool("authority", bcons->authority, &extlist);
-//     X509V3_add_value_int("pathlen", bcons->pathlen, &extlist);
-//     return extlist;
-// }
-
-// static BASIC_ATTR_CONSTRAINTS *v2i_BASIC_ATTR_CONSTRAINTS(X509V3_EXT_METHOD *method,
-//                                                 X509V3_CTX *ctx,
-//                                                 STACK_OF(CONF_VALUE) *values)
-// {
-//     BASIC_ATTR_CONSTRAINTS *bcons = NULL;
-//     CONF_VALUE *val;
-//     int i;
-
-//     if ((bcons = BASIC_ATTR_CONSTRAINTS_new()) == NULL) {
-//         ERR_raise(ERR_LIB_X509V3, ERR_R_ASN1_LIB);
-//         return NULL;
-//     }
-//     for (i = 0; i < sk_CONF_VALUE_num(values); i++) {
-//         val = sk_CONF_VALUE_value(values, i);
-//         if (strcmp(val->name, "authority") == 0) {
-//             if (!X509V3_get_value_bool(val, &bcons->authority))
-//                 goto err;
-//         } else if (strcmp(val->name, "pathlen") == 0) {
-//             if (!X509V3_get_value_int(val, &bcons->pathlen))
-//                 goto err;
-//         } else {
-//             ERR_raise(ERR_LIB_X509V3, X509V3_R_INVALID_NAME);
-//             X509V3_conf_add_error_name_value(val);
-//             goto err;
-//         }
-//     }
-//     return bcons;
-//  err:
-//     BASIC_ATTR_CONSTRAINTS_free(bcons);
-//     return NULL;
-// }
-
 static int i2r_HASH(X509V3_EXT_METHOD *method,
                     HASH *hash,
                     BIO *out, int indent)
@@ -110,7 +68,7 @@ static int i2r_INFO_SYNTAX_POINTER(X509V3_EXT_METHOD *method,
                                    BIO *out, int indent)
 {
     BIO_printf(out, "%*sNames:\n", indent, "");
-    ossl_print_gens(out, pointer->name, indent + 4);
+    ossl_print_gens(out, pointer->name, indent);
     BIO_puts(out, "\n");
     if (pointer->hash != NULL) {
         BIO_printf(out, "%*sHash:\n", indent, "");
@@ -143,9 +101,13 @@ static int i2r_PRIVILEGE_POLICY_ID(X509V3_EXT_METHOD *method,
                                    PRIVILEGE_POLICY_ID *ppid,
                                    BIO *out, int indent)
 {
-    BIO_printf(out, "%*sIdentifier: ", indent, "");
-    i2a_ASN1_OBJECT(out, ppid->privilegePolicy);
-    BIO_puts(out, "\n");
+    char buf[80];
+
+    /* Intentionally display the numeric OID, rather than the textual name. */
+    if (OBJ_obj2txt(buf, sizeof(buf), ppid->privilegePolicy, 1) <= 0) {
+        return 0;
+    }
+    BIO_printf(out, "%*sIdentifier: %s\n", indent, "", buf);
     BIO_printf(out, "%*sSyntax:\n", indent, "");
     i2r_INFO_SYNTAX(method, ppid->privPolSyntax, out, indent + 4);
     return 1;
@@ -155,12 +117,16 @@ static int i2r_ATTRIBUTE_DESCRIPTOR(X509V3_EXT_METHOD *method,
                                     ATTRIBUTE_DESCRIPTOR *ad,
                                     BIO *out, int indent)
 {
-    BIO_printf(out, "%*sIdentifier: ", indent, "");
-    i2a_ASN1_OBJECT(out, ad->identifier);
-    BIO_puts(out, "\n");
-    BIO_printf(out, "%*sSyntax: ", indent, "");
-    BIO_printf(out, "%.*s", ad->attributeSyntax->length, ad->attributeSyntax->data);
-    BIO_puts(out, "\n");
+    char buf[80];
+
+    /* Intentionally display the numeric OID, rather than the textual name. */
+    if (OBJ_obj2txt(buf, sizeof(buf), ad->identifier, 1) <= 0) {
+        return 0;
+    }
+    BIO_printf(out, "%*sIdentifier: %s\n", indent, "", buf);
+    BIO_printf(out, "%*sSyntax:\n", indent, "");
+    BIO_printf(out, "%*s%.*s", indent + 4, "", ad->attributeSyntax->length, ad->attributeSyntax->data);
+    BIO_puts(out, "\n\n");
     if (ad->name != NULL) {
         BIO_printf(out, "%*sName: ", indent, "");
         BIO_printf(out, "%.*s", ad->name->length, ad->name->data);
@@ -177,12 +143,12 @@ static int i2r_ATTRIBUTE_DESCRIPTOR(X509V3_EXT_METHOD *method,
 }
 
 const X509V3_EXT_METHOD ossl_v3_attribute_descriptor = {
-    NID_attribute_descriptor, 0,
+    NID_attribute_descriptor, X509V3_EXT_MULTILINE,
     ASN1_ITEM_ref(ATTRIBUTE_DESCRIPTOR),
     0, 0, 0, 0,
     0, 0,
-    0, // (X509V3_EXT_I2V)i2v_BASIC_ATTR_CONSTRAINTS,
-    0, // (X509V3_EXT_V2I)v2i_BASIC_ATTR_CONSTRAINTS,
+    0,
+    0,
     (X509V3_EXT_I2R)i2r_ATTRIBUTE_DESCRIPTOR,
     NULL,
     NULL

@@ -40,7 +40,7 @@ ASN1_ITEM_TEMPLATE_END(AUTHORITY_ATTRIBUTE_ID_SYNTAX)
 IMPLEMENT_ASN1_FUNCTIONS(AUTHORITY_ATTRIBUTE_ID_SYNTAX)
 
 const X509V3_EXT_METHOD ossl_v3_authority_attribute_identifier = {
-    NID_authority_attribute_identifier, 0,
+    NID_authority_attribute_identifier, X509V3_EXT_MULTILINE,
     ASN1_ITEM_ref(AUTHORITY_ATTRIBUTE_ID_SYNTAX),
     0, 0, 0, 0,
     0,

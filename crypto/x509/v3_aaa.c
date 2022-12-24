@@ -99,7 +99,7 @@ static int i2r_ALLOWED_ATTRIBUTES_SYNTAX(X509V3_EXT_METHOD *method,
 }
 
 const X509V3_EXT_METHOD ossl_v3_allowed_attribute_assignments = {
-    NID_allowed_attribute_assignments, 0,
+    NID_allowed_attribute_assignments, X509V3_EXT_MULTILINE,
     ASN1_ITEM_ref(ALLOWED_ATTRIBUTES_SYNTAX),
     0, 0, 0, 0,
     0, 0,

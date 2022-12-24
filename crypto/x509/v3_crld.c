@@ -503,3 +503,159 @@ int DIST_POINT_set_dpname(DIST_POINT_NAME *dpn, const X509_NAME *iname)
     dpn->dpname = NULL;
     return 0;
 }
+
+ASN1_SEQUENCE(AA_DIST_POINT) = {
+    ASN1_EXP_OPT(AA_DIST_POINT, distpoint, DIST_POINT_NAME, 0),
+    ASN1_IMP_OPT(AA_DIST_POINT, reasons, ASN1_BIT_STRING, 1),
+    ASN1_IMP_OPT(AA_DIST_POINT, indirectCRL, ASN1_FBOOLEAN, 2),
+    ASN1_IMP_OPT(AA_DIST_POINT, containsUserAttributeCerts, ASN1_TBOOLEAN, 3),
+    ASN1_IMP_OPT(AA_DIST_POINT, containsAACerts, ASN1_TBOOLEAN, 4),
+    ASN1_IMP_OPT(AA_DIST_POINT, containsSOAPublicKeyCerts, ASN1_TBOOLEAN, 5)
+} ASN1_SEQUENCE_END(AA_DIST_POINT)
+
+IMPLEMENT_ASN1_FUNCTIONS(AA_DIST_POINT)
+
+static int print_boolean (BIO *out, ASN1_BOOLEAN b) {
+    if (b) {
+        BIO_puts(out, "TRUE");
+    } else {
+        BIO_puts(out, "FALSE");
+    }
+}
+
+static AA_DIST_POINT *aaidp_from_section(X509V3_CTX *ctx,
+                                      STACK_OF(CONF_VALUE) *nval)
+{
+    int i;
+    CONF_VALUE *cnf;
+    AA_DIST_POINT *point = AA_DIST_POINT_new();
+
+    if (point == NULL)
+        goto err;
+    for (i = 0; i < sk_CONF_VALUE_num(nval); i++) {
+        int ret;
+        cnf = sk_CONF_VALUE_value(nval, i);
+        ret = set_dist_point_name(&point->distpoint, ctx, cnf);
+        if (ret > 0)
+            continue;
+        if (ret < 0)
+            goto err;
+        if (strcmp(cnf->name, "reasons") == 0) {
+            if (!set_reasons(&point->reasons, cnf->value))
+                goto err;
+        } else if (strcmp(cnf->name, "indirectCRL") == 0) {
+            if (!X509V3_get_value_bool(cnf, &point->indirectCRL))
+                goto err;
+        } else if (strcmp(cnf->name, "containsUserAttributeCerts") == 0) {
+            if (!X509V3_get_value_bool(cnf, &point->containsUserAttributeCerts))
+                goto err;
+        } else if (strcmp(cnf->name, "containsAACerts") == 0) {
+            if (!X509V3_get_value_bool(cnf, &point->containsAACerts))
+                goto err;
+        } else if (strcmp(cnf->name, "containsSOAPublicKeyCerts") == 0) {
+            if (!X509V3_get_value_bool(cnf, &point->containsSOAPublicKeyCerts))
+                goto err;
+        }
+    }
+
+    return point;
+
+ err:
+    AA_DIST_POINT_free(point);
+    return NULL;
+}
+
+static void *v2i_aaidp(const X509V3_EXT_METHOD *method,
+                      X509V3_CTX *ctx, STACK_OF(CONF_VALUE) *nval)
+{
+    GENERAL_NAMES *gens = NULL;
+    GENERAL_NAME *gen = NULL;
+    CONF_VALUE *cnf;
+    const int num = sk_CONF_VALUE_num(nval);
+    int i;
+    AA_DIST_POINT *point;
+
+    cnf = sk_CONF_VALUE_value(nval, i);
+    if (cnf->value == NULL) {
+        STACK_OF(CONF_VALUE) *dpsect;
+        dpsect = X509V3_get_section(ctx, cnf->name);
+        if (!dpsect)
+            goto err;
+        point = aaidp_from_section(ctx, dpsect);
+        X509V3_section_free(ctx, dpsect);
+        if (point == NULL)
+            goto err;
+    } else {
+        if ((gen = v2i_GENERAL_NAME(method, ctx, cnf)) == NULL)
+            goto err;
+        if ((gens = GENERAL_NAMES_new()) == NULL) {
+            ERR_raise(ERR_LIB_X509V3, ERR_R_ASN1_LIB);
+            goto err;
+        }
+        if (!sk_GENERAL_NAME_push(gens, gen)) {
+            ERR_raise(ERR_LIB_X509V3, ERR_R_CRYPTO_LIB);
+            goto err;
+        }
+        gen = NULL;
+        if ((point = DIST_POINT_new()) == NULL) {
+            ERR_raise(ERR_LIB_X509V3, ERR_R_ASN1_LIB);
+            goto err;
+        }
+        if ((point->distpoint = DIST_POINT_NAME_new()) == NULL) {
+            ERR_raise(ERR_LIB_X509V3, ERR_R_ASN1_LIB);
+            goto err;
+        }
+        point->distpoint->name.fullname = gens;
+        point->distpoint->type = 0;
+        gens = NULL;
+    }
+    return point;
+
+ err:
+    GENERAL_NAME_free(gen);
+    GENERAL_NAMES_free(gens);
+    AA_DIST_POINT_free(point);
+    return NULL;
+}
+
+
+static int i2r_aaidp(const X509V3_EXT_METHOD *method, AA_DIST_POINT *dp, BIO *out,
+                     int indent)
+{
+    if (dp->distpoint)
+        print_distpoint(out, dp->distpoint, indent);
+    if (dp->reasons)
+        print_reasons(out, "Reasons", dp->reasons, indent);
+    if (dp->indirectCRL) {
+        BIO_printf(out, "%*sIndirect CRL: ", indent, "");
+        print_boolean(out, dp->indirectCRL);
+        BIO_puts(out, "\n");
+    }
+    if (dp->containsUserAttributeCerts) {
+        BIO_printf(out, "%*sContains User Attribute Certificates: ", indent, "");
+        print_boolean(out, dp->containsUserAttributeCerts);
+        BIO_puts(out, "\n");
+    }
+    if (dp->containsAACerts) {
+        BIO_printf(out, "%*sContains Attribute Authority (AA) Certificates: ", indent, "");
+        print_boolean(out, dp->containsAACerts);
+        BIO_puts(out, "\n");
+    }
+    if (dp->containsSOAPublicKeyCerts) {
+        BIO_printf(out, "%*sContains Source Of Authority (SOA) Public Key Certificates: ", indent, "");
+        print_boolean(out, dp->containsSOAPublicKeyCerts);
+        BIO_puts(out, "\n");
+    }
+    return 1;
+}
+
+const X509V3_EXT_METHOD ossl_v3_aa_issuing_dist_point = {
+    NID_id_aa_issuing_distribution_point, X509V3_EXT_MULTILINE,
+    ASN1_ITEM_ref(AA_DIST_POINT),
+    0, 0, 0, 0,
+    0, 0,
+    0,
+    v2i_aaidp,
+    i2r_aaidp, 0,
+    NULL
+};

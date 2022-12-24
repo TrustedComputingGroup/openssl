@@ -63,7 +63,7 @@ const X509V3_EXT_METHOD ossl_v3_delegated_name_constraints = {
 };
 
 const X509V3_EXT_METHOD ossl_v3_holder_name_constraints = {
-    NID_holder_name_constraints, 0,
+    NID_holder_name_constraints, X509V3_EXT_MULTILINE,
     ASN1_ITEM_ref(NAME_CONSTRAINTS),
     0, 0, 0, 0,
     0, 0,
