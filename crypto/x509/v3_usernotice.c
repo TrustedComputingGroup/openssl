@@ -7,14 +7,8 @@
  * https://www.openssl.org/source/license.html
  */
 
-#include <stdio.h>
-#include "internal/cryptlib.h"
-#include <openssl/asn1.h>
 #include <openssl/asn1t.h>
-#include <openssl/conf.h>
 #include <openssl/x509v3.h>
-#include "ext_dat.h"
-#include "x509_local.h"
 
 
 ASN1_ITEM_TEMPLATE(USER_NOTICE_SYNTAX) =
@@ -29,11 +23,17 @@ static int i2r_USER_NOTICE_SYNTAX(X509V3_EXT_METHOD *method,
 {
     int i;
     USERNOTICE *unotice;
+    if (BIO_printf(out, "%*sUser Notices:\n", indent, "") <= 0) {
+        return 0;
+    }
     for (i = 0; i < sk_USERNOTICE_num(uns); i++) {
-        BIO_printf(out, "%*sUser Notices:\n", indent, "");
         unotice = sk_USERNOTICE_value(uns, i);
-        print_notice(out, unotice, indent + 2);
-        BIO_puts(out, "\n");
+        if (print_notice(out, unotice, indent + 4) <= 0) {
+            return 0;
+        }
+        if (BIO_puts(out, "\n") <= 0) {
+            return 0;
+        }
     }
     return 1;
 }

@@ -7,19 +7,10 @@
  * https://www.openssl.org/source/license.html
  */
 
-#include <stdio.h>
 #include "internal/cryptlib.h"
-#include <openssl/asn1.h>
 #include <openssl/asn1t.h>
-#include <openssl/conf.h>
 #include <openssl/x509v3.h>
-#include "ext_dat.h"
-#include "x509_local.h"
-#include "crypto/asn1.h"
 
-static int i2r_OBJECT_DIGEST_INFO(X509V3_EXT_METHOD *method,
-                                  OBJECT_DIGEST_INFO *odi,
-                                  BIO *out, int indent);
 static int i2r_TARGET_CERT(X509V3_EXT_METHOD *method,
                            TARGET_CERT *tc,
                            BIO *out, int indent);
@@ -93,26 +84,40 @@ static int i2r_OBJECT_DIGEST_INFO(X509V3_EXT_METHOD *method,
     }
     switch (dot) {
     case (ODI_TYPE_PUBLIC_KEY):
-        BIO_printf(out, "%*sDigest Type: Public Key\n", indent, "");
+        if (BIO_printf(out, "%*sDigest Type: Public Key\n", indent, "") <= 0) {
+            return 0;
+        }
         break;
     case (ODI_TYPE_PUBLIC_KEY_CERT):
-        BIO_printf(out, "%*sDigest Type: Public Key Certificate\n", indent, "");
+        if (BIO_printf(out, "%*sDigest Type: Public Key Certificate\n", indent, "") <= 0) {
+            return 0;
+        }
         break;
     case (ODI_TYPE_OTHER): {
-        BIO_printf(out, "%*sDigest Type: Other\n", indent, "");
+        if (BIO_printf(out, "%*sDigest Type: Other\n", indent, "") <= 0) {
+            return 0;
+        }
         break;
     }
     }
     if (odi->otherObjectTypeID != NULL) {
-        BIO_printf(out, "%*sDigest Type Identifier: ", indent, "");
-        i2a_ASN1_OBJECT(out, odi->otherObjectTypeID);
-        BIO_puts(out, "\n");
+        if (BIO_printf(out, "%*sDigest Type Identifier: ", indent, "") <= 0) {
+            return 0;
+        }
+        if (i2a_ASN1_OBJECT(out, odi->otherObjectTypeID) <= 0) {
+            return 0;
+        }
+        if (BIO_puts(out, "\n") <= 0) {
+            return 0;
+        }
     }
     if (BIO_printf(out, "%*sSignature Algorithm: ", indent, "") <= 0)
         return 0;
     if (i2a_ASN1_OBJECT(out, odi->digestAlgorithm->algorithm) <= 0)
         return 0;
-    BIO_puts(out, "\n");
+    if (BIO_puts(out, "\n") <= 0) {
+        return 0;
+    }
     if (BIO_printf(out, "\n%*sSignature Value: ", indent, "") <= 0)
         return 0;
     sig_nid = OBJ_obj2nid(odi->digestAlgorithm->algorithm);
@@ -125,7 +130,7 @@ static int i2r_OBJECT_DIGEST_INFO(X509V3_EXT_METHOD *method,
                 return ameth->sig_print(out, digalg, sig, indent + 4, 0);
         }
     }
-    if (BIO_write(out, "\n", 1) != 1)
+    if (BIO_write(out, "\n", 1) <= 0)
         return 0;
     if (sig)
         return X509_signature_dump(out, sig, indent + 4);
@@ -136,23 +141,38 @@ static int i2r_TARGET_CERT(X509V3_EXT_METHOD *method,
                            TARGET_CERT *tc,
                            BIO *out, int indent)
 {
-    BIO_printf(out, "%*s", indent, "");
+    if (BIO_printf(out, "%*s", indent, "") <= 0) {
+        return 0;
+    }
     if (tc->targetCertificate != NULL) {
-        BIO_puts(out, "Target Certificate:\n");
-        i2r_ISSUER_SERIAL(method, tc->targetCertificate, out, indent + 2);
+        if (BIO_puts(out, "Target Certificate:\n") <= 0) {
+            return 0;
+        }
+        if (i2r_ISSUER_SERIAL(method, tc->targetCertificate, out, indent + 2) <= 0) {
+            return 0;
+        }
     }
     if (tc->targetName != NULL) {
         // BIO_puts(out, "Target Name: ");
-        BIO_printf(out, "%*sTarget Name: ", indent, "");
-        GENERAL_NAME_print(out, tc->targetName);
-        BIO_puts(out, "\n");
+        if (BIO_printf(out, "%*sTarget Name: ", indent, "") <= 0) {
+            return 0;
+        }
+        if (GENERAL_NAME_print(out, tc->targetName) <= 0) {
+            return 0;
+        }
+        if (BIO_puts(out, "\n") <= 0) {
+            return 0;
+        }
     }
     if (tc->certDigestInfo != NULL) {
-        BIO_printf(out, "%*sCertificate Digest Info:\n", indent, "");
-        i2r_OBJECT_DIGEST_INFO(method, tc->certDigestInfo, out, indent + 2);
+        if (BIO_printf(out, "%*sCertificate Digest Info:\n", indent, "") <= 0) {
+            return 0;
+        }
+        if (i2r_OBJECT_DIGEST_INFO(method, tc->certDigestInfo, out, indent + 2) <= 0) {
+            return 0;
+        }
     }
-    BIO_puts(out, "\n");
-    return 1;
+    return BIO_puts(out, "\n");
 }
 
 static int i2r_TARGET(X509V3_EXT_METHOD *method,
@@ -161,19 +181,26 @@ static int i2r_TARGET(X509V3_EXT_METHOD *method,
 {
     switch (target->type) {
     case (TGT_TARGET_NAME):
-        BIO_printf(out, "%*sTarget Name: ", indent, "");
-        GENERAL_NAME_print(out, target->choice.targetName);
-        BIO_puts(out, "\n");
-        break;
+        if (BIO_printf(out, "%*sTarget Name: ", indent, "") <= 0) {
+            return 0;
+        }
+        if (GENERAL_NAME_print(out, target->choice.targetName) <= 0) {
+            return 0;
+        }
+        return BIO_puts(out, "\n");
     case (TGT_TARGET_GROUP):
-        BIO_printf(out, "%*sTarget Group: ", indent, "");
-        GENERAL_NAME_print(out, target->choice.targetGroup);
-        BIO_puts(out, "\n");
-        break;
+        if (BIO_printf(out, "%*sTarget Group: ", indent, "") <= 0) {
+            return 0;
+        }
+        if (GENERAL_NAME_print(out, target->choice.targetGroup) <= 0) {
+            return 0;
+        }
+        return BIO_puts(out, "\n");
     case (TGT_TARGET_CERT):
-        BIO_printf(out, "%*sTarget Cert:\n", indent, "");
-        i2r_TARGET_CERT(method, target->choice.targetCert, out, indent + 2);
-        break;
+        if (BIO_printf(out, "%*sTarget Cert:\n", indent, "") <= 0) {
+            return 0;
+        }
+        return i2r_TARGET_CERT(method, target->choice.targetCert, out, indent + 2);
     }
     return 1;
 }
@@ -185,9 +212,13 @@ static int i2r_TARGETS(X509V3_EXT_METHOD *method,
     int i;
     TARGET *target;
     for (i = 0; i < sk_TARGET_num(targets); i++) {
-        BIO_printf(out, "%*sTarget:\n", indent, "");
+        if (BIO_printf(out, "%*sTarget:\n", indent, "") <= 0) {
+            return 0;
+        }
         target = sk_TARGET_value(targets, i);
-        i2r_TARGET(method, target, out, indent + 2);
+        if (i2r_TARGET(method, target, out, indent + 2) <= 0) {
+            return 0;
+        }
     }
     return 1;
 }
@@ -199,9 +230,13 @@ static int i2r_TARGETING_INFORMATION(X509V3_EXT_METHOD *method,
     int i;
     TARGETS *targets;
     for (i = 0; i < sk_TARGETS_num(tinfo); i++) {
-        BIO_printf(out, "%*sTargets:\n", indent, "");
+        if (BIO_printf(out, "%*sTargets:\n", indent, "") <= 0) {
+            return 0;
+        }
         targets = sk_TARGETS_value(tinfo, i);
-        i2r_TARGETS(method, targets, out, indent + 2);
+        if (i2r_TARGETS(method, targets, out, indent + 2) <= 0) {
+            return 0;
+        }
     }
     return 1;
 }

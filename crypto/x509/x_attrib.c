@@ -76,14 +76,18 @@ static int ASN1_INTEGER_print_bio(BIO *bio, const ASN1_INTEGER *num)
     return result;
 }
 
-void print_hex(BIO *out, unsigned char *buf, int len)
+int print_hex(BIO *out, unsigned char *buf, int len)
 {
     int i;
-    for (i = 0; i < len; i++)
-        BIO_printf(out, "%02X ", buf[i]);
+    for (i = 0; i < len; i++) {
+        if (BIO_printf(out, "%02X ", buf[i]) <= 0) {
+            return 0;
+        }
+    }
+    return 1;
 }
 
-void print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
+int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
 {
     const char *ln;
     char objbuf[80];
@@ -107,56 +111,56 @@ void print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
     case NID_owner:
         value = av->value.sequence->data;
         if ((xn = d2i_X509_NAME(NULL, (const unsigned char**)&(av->value.sequence->data), av->value.sequence->length)) == NULL) {
-            BIO_puts(out, "(COULD NOT DECODE DISTINGUISHED NAME)");
+            if (BIO_puts(out, "(COULD NOT DECODE DISTINGUISHED NAME)") <= 0) {
+                return 0;
+            }
             break;
         }
         // d2i_ functions increment the ppin pointer. See doc/man3/d2i_X509.pod.
         // This resets the pointer. We don't want to corrupt this value.
         av->value.sequence->data = value;
-        X509_NAME_print_ex(out, xn, 0, 0);
+        if (X509_NAME_print_ex(out, xn, 0, 0) <= 0) {
+            return 0;
+        }
         X509_NAME_free(xn);
-        return;
+        return 1;
     default: break;
     }
 
     switch (av->type) {
     case V_ASN1_BOOLEAN:
         if (av->value.boolean) {
-            BIO_puts(out, "TRUE");
+            return BIO_puts(out, "TRUE");
         } else {
-            BIO_puts(out, "FALSE");
+            return BIO_puts(out, "FALSE");
         }
-        break;
 
     case V_ASN1_INTEGER:
     case V_ASN1_ENUMERATED:
         str = av->value.integer;
-        ASN1_INTEGER_print_bio(out, str);
-        break;
+        return ASN1_INTEGER_print_bio(out, str);
 
     case V_ASN1_BIT_STRING:
-        print_hex(out, av->value.bit_string->data,
+        return print_hex(out, av->value.bit_string->data,
                  av->value.bit_string->length);
-        break;
 
     case V_ASN1_OCTET_STRING:
     case V_ASN1_VIDEOTEXSTRING:
-        print_hex(out, av->value.octet_string->data,
+        return print_hex(out, av->value.octet_string->data,
                  av->value.octet_string->length);
-        break;
 
     case V_ASN1_NULL:
-        BIO_puts(out, "NULL");
-        break;
+        return BIO_puts(out, "NULL");
 
     case V_ASN1_OBJECT:
         /* Does this need to be freed? */
         ln = OBJ_nid2ln(OBJ_obj2nid(av->value.object));
         if (!ln)
             ln = "";
-        OBJ_obj2txt(objbuf, sizeof(objbuf), av->value.object, 1);
-        BIO_printf(out, "%s (%s)", ln, objbuf);
-        break;
+        if (OBJ_obj2txt(objbuf, sizeof(objbuf), av->value.object, 1) <= 0) {
+            return 0;
+        }
+        return BIO_printf(out, "%s (%s)", ln, objbuf);
     
     /* ObjectDescriptor is an IMPLICIT GraphicString, but GeneralString is a
     superset supported by OpenSSL, so we will use that anywhere a GraphicString
@@ -164,41 +168,29 @@ void print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
     case V_ASN1_GENERALSTRING:
     case V_ASN1_GRAPHICSTRING:
     case V_ASN1_OBJECT_DESCRIPTOR:
-        BIO_printf(out, "%.*s", av->value.generalstring->length,
+        return BIO_printf(out, "%.*s", av->value.generalstring->length,
                 av->value.generalstring->data);
-        break;
-    
-    // case V_ASN1_EXTERNAL:
-    //     BIO_puts(out, "EXTERNAL");
-    //     break;
 
-    // case V_ASN1_REAL:
-    //     BIO_puts(out, "REAL");
-    //     break;
-
+    /* EXTERNAL */
     /* EMBEDDED PDV */
 
     case V_ASN1_UTF8STRING:
-        BIO_printf(out, "%.*s", av->value.utf8string->length,
+        return BIO_printf(out, "%.*s", av->value.utf8string->length,
                    av->value.utf8string->data);
-        break;
 
     case V_ASN1_REAL:
-        BIO_puts(out, "REAL");
-        break;
+        return BIO_puts(out, "REAL");
 
     /* RELATIVE-OID */
     /* TIME */
 
     case V_ASN1_SEQUENCE:
-        ASN1_parse_dump(out, av->value.sequence->data,
+        return ASN1_parse_dump(out, av->value.sequence->data,
                         av->value.sequence->length, 0, 1);
-        break;
 
     case V_ASN1_SET:
-        ASN1_parse_dump(out, av->value.set->data,
+        return ASN1_parse_dump(out, av->value.set->data,
                 av->value.set->length, 0, 1);
-        break;
 
     /*
         UTCTime ::= [UNIVERSAL 23] IMPLICIT VisibleString
@@ -209,24 +201,20 @@ void print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
     case V_ASN1_UTCTIME:
     case V_ASN1_GENERALIZEDTIME:
     case V_ASN1_NUMERICSTRING:
-        BIO_printf(out, "%.*s", av->value.visiblestring->length,
+        return BIO_printf(out, "%.*s", av->value.visiblestring->length,
                    av->value.visiblestring->data);
-        break;
 
     case V_ASN1_PRINTABLESTRING:
-        BIO_printf(out, "%.*s", av->value.printablestring->length,
+        return BIO_printf(out, "%.*s", av->value.printablestring->length,
             av->value.printablestring->data);
-        break;
 
     case V_ASN1_T61STRING:
-        BIO_printf(out, "%.*s", av->value.t61string->length,
+        return BIO_printf(out, "%.*s", av->value.t61string->length,
             av->value.t61string->data);
-        break;
 
     case V_ASN1_IA5STRING:
-        BIO_printf(out, "%.*s", av->value.ia5string->length,
+        return BIO_printf(out, "%.*s", av->value.ia5string->length,
             av->value.ia5string->data);
-        break;
 
     /* UniversalString */
     /* CHARACTER STRING */
@@ -234,9 +222,9 @@ void print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
     case V_ASN1_BMPSTRING:
         value = OPENSSL_uni2asc(av->value.bmpstring->data,
                                 av->value.bmpstring->length);
-        BIO_printf(out, "%s", value);
+        int ret = BIO_printf(out, "%s", value);
         OPENSSL_free(value);
-        break;
+        return ret;
 
     /* DATE */
     /* TIME-OF-DAY */
@@ -247,7 +235,6 @@ void print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
 
     /* Would it be approriate to just hexdump? */
     default:
-        BIO_printf(out, "<Unsupported tag %d>", av->type);
-        break;
+        return BIO_printf(out, "<Unsupported tag %d>", av->type);
     }
 }

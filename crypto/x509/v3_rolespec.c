@@ -7,14 +7,8 @@
  * https://www.openssl.org/source/license.html
  */
 
-#include <stdio.h>
-#include "internal/cryptlib.h"
-#include <openssl/asn1.h>
 #include <openssl/asn1t.h>
-#include <openssl/conf.h>
 #include <openssl/x509v3.h>
-#include "ext_dat.h"
-#include "x509_local.h"
 
 ASN1_SEQUENCE(ROLE_SPEC_CERT_ID) = {
     ASN1_EXP(ROLE_SPEC_CERT_ID, roleName, GENERAL_NAME, 0),
@@ -55,23 +49,44 @@ static int i2r_ROLE_SPEC_CERT_ID(X509V3_EXT_METHOD *method,
                                  ROLE_SPEC_CERT_ID *rscid,
                                  BIO *out, int indent)
 {
-    BIO_printf(out, "%*sRole Name: ", indent, "");
-    GENERAL_NAME_print(out, rscid->roleName);
-    BIO_puts(out, "\n");
-    BIO_printf(out, "%*sRole Certificate Issuer: ", indent, "");
-    GENERAL_NAME_print(out, rscid->roleCertIssuer);
+    if (BIO_printf(out, "%*sRole Name: ", indent, "") <= 0) {
+        return 0;
+    }
+    if (GENERAL_NAME_print(out, rscid->roleName) <= 0) {
+        return 0;
+    }
+    if (BIO_puts(out, "\n") <= 0) {
+        return 0;
+    }
+    if (BIO_printf(out, "%*sRole Certificate Issuer: ", indent, "") <= 0) {
+        return 0;
+    }
+    if (GENERAL_NAME_print(out, rscid->roleCertIssuer) <= 0) {
+        return 0;
+    }
     if (rscid->roleCertSerialNumber) {
-        BIO_puts(out, "\n");
-        BIO_printf(out, "%*sRole Certificate Serial Number: ", indent, "");
-        ASN1_INTEGER_print_bio(out, rscid->roleCertSerialNumber);
+        if (BIO_puts(out, "\n") <= 0) {
+            return 0;
+        }
+        if (BIO_printf(out, "%*sRole Certificate Serial Number: ", indent, "") <= 0) {
+            return 0;
+        }
+        if (ASN1_INTEGER_print_bio(out, rscid->roleCertSerialNumber) <= 0) {
+            return 0;
+        }
     }
     if (rscid->roleCertLocator) {
-        BIO_puts(out, "\n");
-        BIO_printf(out, "%*sRole Certificate Locator:\n", indent, "");
-        ossl_print_gens(out, rscid->roleCertLocator, indent);
+        if (BIO_puts(out, "\n") <= 0) {
+            return 0;
+        }
+        if (BIO_printf(out, "%*sRole Certificate Locator:\n", indent, "") <= 0) {
+            return 0;
+        }
+        if (ossl_print_gens(out, rscid->roleCertLocator, indent) <= 0) {
+            return 0;
+        }
     }
-    BIO_puts(out, "\n");
-    return 1; 
+    return BIO_puts(out, "\n");
 }
 
 static int i2r_ROLE_SPEC_CERT_ID_SYNTAX(X509V3_EXT_METHOD *method,
@@ -81,9 +96,12 @@ static int i2r_ROLE_SPEC_CERT_ID_SYNTAX(X509V3_EXT_METHOD *method,
     ROLE_SPEC_CERT_ID *rscid;
     int i;
     for (i = 0; i < sk_ROLE_SPEC_CERT_ID_num(rscids); i++) {
-        if (i > 0)
-            BIO_puts(out, "\n");
-        BIO_printf(out, "%*sRole Specification Certificate Identifier #%d:\n", indent, "", i+1);
+        if (i > 0 && BIO_puts(out, "\n") <= 0) {
+            return 0;
+        }
+        if (BIO_printf(out, "%*sRole Specification Certificate Identifier #%d:\n", indent, "", i+1) <= 0) {
+            return 0;
+        }
         rscid = sk_ROLE_SPEC_CERT_ID_value(rscids, i);
         if (i2r_ROLE_SPEC_CERT_ID(method, rscid, out, indent + 4) != 1) {
             return 0;

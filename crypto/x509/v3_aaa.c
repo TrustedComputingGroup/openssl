@@ -7,11 +7,8 @@
  * https://www.openssl.org/source/license.html
  */
 
-#include <stdio.h>
-#include "internal/cryptlib.h"
 #include <openssl/asn1t.h>
 #include <openssl/x509v3.h>
-#include "ext_dat.h"
 
 IMPLEMENT_ASN1_FUNCTIONS(ALLOWED_ATTRIBUTES_SYNTAX)
 
@@ -41,24 +38,37 @@ static int i2r_ALLOWED_ATTRIBUTES_CHOICE(X509V3_EXT_METHOD *method,
 
     switch (a->type) {
     case (AAA_ATTRIBUTE_TYPE):
-        BIO_printf(out, "%*sAttribute Type: ", indent, "");
-        i2a_ASN1_OBJECT(out, a->choice.attributeType);
-        BIO_puts(out, "\n");
-        break;
+        if (BIO_printf(out, "%*sAttribute Type: ", indent, "") <= 0) {
+            return 0;
+        }
+        if (i2a_ASN1_OBJECT(out, a->choice.attributeType) <= 0) {
+            return 0;
+        }
+        return BIO_puts(out, "\n");
     case (AAA_ATTRIBUTE_VALUES):
         attr = a->choice.attributeTypeandValues;
         attr_obj = X509_ATTRIBUTE_get0_object(attr);
         attr_nid = OBJ_obj2nid(attr_obj);
-        BIO_printf(out, "%*sAttribute Values: ", indent, "");
-        i2a_ASN1_OBJECT(out, attr_obj);
-        BIO_puts(out, "\n");
+        if (BIO_printf(out, "%*sAttribute Values: ", indent, "") <= 0) {
+            return 0;
+        }
+        if (i2a_ASN1_OBJECT(out, attr_obj) <= 0) {
+            return 0;
+        }
+        if (BIO_puts(out, "\n") <= 0) {
+            return 0;
+        }
         for (j = 0; j < X509_ATTRIBUTE_count(attr); j++)
         {
             av = X509_ATTRIBUTE_get0_type(attr, j);
             if (BIO_printf(out, "%*s", indent + 4, "") <= 0)
                 return 0;
-            print_attribute_value(out, attr_nid, av);
-            BIO_puts(out, "\n");
+            if (print_attribute_value(out, attr_nid, av) <= 0) {
+                return 0;
+            }
+            if (BIO_puts(out, "\n") <= 0) {
+                return 0;
+            }
         }
         // BIO_puts(out, "\n");
         break;
@@ -74,13 +84,23 @@ static int i2r_ALLOWED_ATTRIBUTES_ITEM(X509V3_EXT_METHOD *method,
     int i;
     ALLOWED_ATTRIBUTES_CHOICE *a;
     for (i = 0; i < sk_ALLOWED_ATTRIBUTES_CHOICE_num(aai->attributes); i++) {
-        BIO_printf(out, "%*sAllowed Attribute Type or Values:\n", indent, "");
+        if (BIO_printf(out, "%*sAllowed Attribute Type or Values:\n", indent, "") <= 0) {
+            return 0;
+        }
         a = sk_ALLOWED_ATTRIBUTES_CHOICE_value(aai->attributes, i);
-        i2r_ALLOWED_ATTRIBUTES_CHOICE(method, a, out, indent + 4);
+        if (i2r_ALLOWED_ATTRIBUTES_CHOICE(method, a, out, indent + 4) <= 0) {
+            return 0;
+        }
     }
-    BIO_printf(out, "%*sHolder Domain: ", indent, "");
-    GENERAL_NAME_print(out, aai->holderDomain);
-    BIO_puts(out, "\n");
+    if (BIO_printf(out, "%*sHolder Domain: ", indent, "") <= 0) {
+        return 0;
+    }
+    if (GENERAL_NAME_print(out, aai->holderDomain) <= 0) {
+        return 0;
+    }
+    if (BIO_puts(out, "\n") <= 0) {
+        return 0;
+    }
     return 1;
 }
 
@@ -91,9 +111,13 @@ static int i2r_ALLOWED_ATTRIBUTES_SYNTAX(X509V3_EXT_METHOD *method,
     int i;
     ALLOWED_ATTRIBUTES_ITEM *aai;
     for (i = 0; i < sk_ALLOWED_ATTRIBUTES_ITEM_num(aaa); i++) {
-        BIO_printf(out, "%*sAllowed Attributes:\n", indent, "");
+        if (BIO_printf(out, "%*sAllowed Attributes:\n", indent, "") <= 0) {
+            return 0;
+        }
         aai = sk_ALLOWED_ATTRIBUTES_ITEM_value(aaa, i);
-        i2r_ALLOWED_ATTRIBUTES_ITEM(method, aai, out, indent + 4);
+        if (i2r_ALLOWED_ATTRIBUTES_ITEM(method, aai, out, indent + 4) <= 0) {
+            return 0;
+        }
     }
     return 1;
 }

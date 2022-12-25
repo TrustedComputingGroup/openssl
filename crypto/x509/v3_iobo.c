@@ -7,19 +7,18 @@
  * https://www.openssl.org/source/license.html
  */
 
-#include <stdio.h>
-#include "internal/cryptlib.h"
-#include <openssl/asn1.h>
-#include <openssl/asn1t.h>
 #include <openssl/x509v3.h>
-#include "ext_dat.h"
 
 static int i2r_IOBO(X509V3_EXT_METHOD *method,
                     GENERAL_NAME *gn, BIO *out,
                     int indent)
 {
-    BIO_printf(out, "%*s", indent, "");
-    GENERAL_NAME_print(out, gn);
+    if (BIO_printf(out, "%*s", indent, "") <= 0) {
+        return 0;
+    }
+    if (GENERAL_NAME_print(out, gn) <= 0) {
+        return 0;
+    }
     return BIO_puts(out, "\n");
 }
 
