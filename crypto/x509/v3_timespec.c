@@ -520,14 +520,18 @@ static int i2r_PERIOD(X509V3_EXT_METHOD *method,
                       TIME_PERIOD *p,
                       BIO *out, int indent)
 {
-    BIO_printf(out, "%*sPeriod:\n", indent, "");
+    if (BIO_printf(out, "%*sPeriod:\n", indent, "") <= 0) {
+        return 0;
+    }
     int i;
     if (p->timesOfDay) {
         DAY_TIME_BAND *band;
         BIO_printf(out, "%*sDaytime bands:\n", indent + 4, "");
         for (i = 0; i < sk_DAY_TIME_BAND_num(p->timesOfDay); i++) {
             band = sk_DAY_TIME_BAND_value(p->timesOfDay, i);
-            BIO_printf(out, "%*s", indent + 8, "");
+            if (BIO_printf(out, "%*s", indent + 8, "") <= 0) {
+                return 0;
+            }
             if (!i2r_DAY_TIME_BAND(method, band, out, indent + 8)) {
                 return 0;
             }
@@ -784,13 +788,18 @@ static int i2r_TIME_SPEC_TIME(X509V3_EXT_METHOD *method,
     int i;
     switch (time->type) {
     case (TIME_SPEC_TIME_TYPE_ABSOLUTE): {
-        BIO_printf(out, "%*sAbsolute: ", indent, "");
-        i2r_TIME_SPEC_ABSOLUTE(method, time->choice.absolute, out, indent + 4);
+        if (BIO_printf(out, "%*sAbsolute: ", indent, "") <= 0) {
+            return 0;
+        }
+        if (i2r_TIME_SPEC_ABSOLUTE(method, time->choice.absolute, out, indent + 4) <= 0) {
+            return 0;
+        }
         return BIO_puts(out, "\n");
-        return 1;
     }
     case (TIME_SPEC_TIME_TYPE_PERIODIC): {
-        BIO_printf(out, "%*sPeriodic:\n", indent, "");
+        if (BIO_printf(out, "%*sPeriodic:\n", indent, "") <= 0) {
+            return 0;
+        }
         for (i = 0; i < sk_TIME_PERIOD_num(time->choice.periodic); i++) {
             if (i > 0 && !BIO_puts(out, "\n")) {
                 return 0;
@@ -816,12 +825,16 @@ static int i2r_TIME_SPEC(X509V3_EXT_METHOD *method,
         if (ASN1_INTEGER_get_int64(&tz, time->timeZone) != 1) {
             return 0;
         }
-        BIO_printf(out, "%*sTimezone: UTC%+03ld:00\n", indent, "", tz);
+        if (BIO_printf(out, "%*sTimezone: UTC%+03ld:00\n", indent, "", tz) <= 0) {
+            return 0;
+        }
     }
     if (time->notThisTime > 0) {
-        BIO_printf(out, "%*sNOT this time:\n", indent, "");
-    } else {
-        BIO_printf(out, "%*sTime:\n", indent, "");
+        if (BIO_printf(out, "%*sNOT this time:\n", indent, "") <= 0) {
+            return 0;
+        }
+    } else if (BIO_printf(out, "%*sTime:\n", indent, "") <= 0) {
+        return 0;
     }
     return i2r_TIME_SPEC_TIME(method, time->time, out, indent + 4);
 }

@@ -24,11 +24,15 @@ static int i2r_ATTRIBUTES_SYNTAX(X509V3_EXT_METHOD *method,
     ASN1_TYPE *av;
     int i, j, attr_nid;
     if (!attrlst) {
-        BIO_printf(out, "<No Attributes>\n");
+        if (BIO_printf(out, "<No Attributes>\n") <= 0) {
+            return 0;
+        }
         return 1;
     }
     if (!sk_X509_ATTRIBUTE_num(attrlst)) {
-        BIO_printf(out, "<Empty Attributes>\n");
+        if (BIO_printf(out, "<Empty Attributes>\n") <= 0) {
+            return 0;
+        }
         return 1;
     }
     for (i = 0; i < sk_X509_ATTRIBUTE_num(attrlst); i++) {
@@ -39,10 +43,14 @@ static int i2r_ATTRIBUTES_SYNTAX(X509V3_EXT_METHOD *method,
         if (indent && BIO_printf(out, "%*s", indent, "") <= 0)
             return 0;
         if (attr_nid == NID_undef) {
-            i2a_ASN1_OBJECT(out, attr_obj);
-            BIO_puts(out, ":\n");
-        } else {
-            BIO_printf(out, "%s:\n", OBJ_nid2ln(attr_nid));
+            if (i2a_ASN1_OBJECT(out, attr_obj) <= 0) {
+                return 0;
+            }
+            if (BIO_puts(out, ":\n") <= 0) {
+                return 0;
+            }
+        } else if (BIO_printf(out, "%s:\n", OBJ_nid2ln(attr_nid)) <= 0) {
+            return 0;
         }
 
         if (X509_ATTRIBUTE_count(attr)) {
@@ -51,12 +59,15 @@ static int i2r_ATTRIBUTES_SYNTAX(X509V3_EXT_METHOD *method,
                 av = X509_ATTRIBUTE_get0_type(attr, j);
                 if (BIO_printf(out, "%*s", indent + 4, "") <= 0)
                     return 0;
-                print_attribute_value(out, attr_nid, av);
-                BIO_puts(out, "\n");
+                if (print_attribute_value(out, attr_nid, av) <= 0) {
+                    return 0;
+                }
+                if (BIO_puts(out, "\n") <= 0) {
+                    return 0;
+                }
             }
-        } else {
-            if (BIO_printf(out, "%*s<No Values>\n", indent + 4, "") <= 0)
-                return 0;
+        } else if (BIO_printf(out, "%*s<No Values>\n", indent + 4, "") <= 0) {
+            return 0;
         }
     }
     return 1;

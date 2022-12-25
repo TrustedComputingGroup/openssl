@@ -21,10 +21,16 @@ static int i2r_AUTHORITY_ATTRIBUTE_ID_SYNTAX(X509V3_EXT_METHOD *method,
     int i;
     ISSUER_SERIAL *aid;
     for (i = 0; i < sk_ISSUER_SERIAL_num(aids); i++) {
-        BIO_printf(out, "%*sIssuer-Serials:\n", indent, "");
+        if (BIO_printf(out, "%*sIssuer-Serials:\n", indent, "") <= 0) {
+            return 0;
+        }
         aid = sk_ISSUER_SERIAL_value(aids, i);
-        i2r_ISSUER_SERIAL(method, aid, out, indent + 4);
-        BIO_puts(out, "\n");
+        if (i2r_ISSUER_SERIAL(method, aid, out, indent + 4) <= 0) {
+            return 0;
+        }
+        if (BIO_puts(out, "\n") <= 0) {
+            return 0;
+        };
     }
     return 1;
 }

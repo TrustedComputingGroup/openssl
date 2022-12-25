@@ -515,14 +515,14 @@ IMPLEMENT_ASN1_FUNCTIONS(AA_DIST_POINT)
 
 static int print_boolean (BIO *out, ASN1_BOOLEAN b) {
     if (b) {
-        BIO_puts(out, "TRUE");
+        return BIO_puts(out, "TRUE");
     } else {
-        BIO_puts(out, "FALSE");
+        return BIO_puts(out, "FALSE");
     }
 }
 
 static AA_DIST_POINT *aaidp_from_section(X509V3_CTX *ctx,
-                                      STACK_OF(CONF_VALUE) *nval)
+                                         STACK_OF(CONF_VALUE) *nval)
 {
     int i;
     CONF_VALUE *cnf;
@@ -621,28 +621,56 @@ static int i2r_aaidp(const X509V3_EXT_METHOD *method, AA_DIST_POINT *dp, BIO *ou
                      int indent)
 {
     if (dp->distpoint)
-        print_distpoint(out, dp->distpoint, indent);
+        if (print_distpoint(out, dp->distpoint, indent) <= 0) {
+            return 0;
+        }
     if (dp->reasons)
-        print_reasons(out, "Reasons", dp->reasons, indent);
+        if (print_reasons(out, "Reasons", dp->reasons, indent) <= 0) {
+            return 0;
+        }
     if (dp->indirectCRL) {
-        BIO_printf(out, "%*sIndirect CRL: ", indent, "");
-        print_boolean(out, dp->indirectCRL);
-        BIO_puts(out, "\n");
+        if (BIO_printf(out, "%*sIndirect CRL: ", indent, "") <= 0) {
+            return 0;
+        }
+        if (print_boolean(out, dp->indirectCRL) <= 0) {
+            return 0;
+        }
+        if (BIO_puts(out, "\n") <= 0) {
+            return 0;
+        }
     }
     if (dp->containsUserAttributeCerts) {
-        BIO_printf(out, "%*sContains User Attribute Certificates: ", indent, "");
-        print_boolean(out, dp->containsUserAttributeCerts);
-        BIO_puts(out, "\n");
+        if (BIO_printf(out, "%*sContains User Attribute Certificates: ", indent, "") <= 0) {
+            return 0;
+        }
+        if (print_boolean(out, dp->containsUserAttributeCerts) <= 0) {
+            return 0;
+        }
+        if (BIO_puts(out, "\n") <= 0) {
+            return 0;
+        }
     }
     if (dp->containsAACerts) {
-        BIO_printf(out, "%*sContains Attribute Authority (AA) Certificates: ", indent, "");
-        print_boolean(out, dp->containsAACerts);
-        BIO_puts(out, "\n");
+        if (BIO_printf(out, "%*sContains Attribute Authority (AA) Certificates: ", indent, "") <= 0) {
+            return 0;
+        }
+        if (print_boolean(out, dp->containsAACerts) <= 0) {
+            return 0;
+        }
+        if (BIO_puts(out, "\n") <= 0) {
+            return 0;
+        }
     }
     if (dp->containsSOAPublicKeyCerts) {
-        BIO_printf(out, "%*sContains Source Of Authority (SOA) Public Key Certificates: ", indent, "");
-        print_boolean(out, dp->containsSOAPublicKeyCerts);
-        BIO_puts(out, "\n");
+        if (BIO_printf(out, "%*sContains Source Of Authority (SOA) Public Key Certificates: ", indent, "") <= 0) {
+            return 0;
+        }
+        if (print_boolean(out, dp->containsSOAPublicKeyCerts) <= 0) {
+            return 0;
+        }
+        if (BIO_puts(out, "\n") <= 0) {
+            return 0;
+        }
     }
     return 1;
 }

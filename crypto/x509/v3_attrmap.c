@@ -47,10 +47,13 @@ static int i2r_ATTRIBUTE_MAPPING(X509V3_EXT_METHOD *method,
 
     switch (am->type) {
     case (ATTR_MAP_TYPE): {
-        i2a_ASN1_OBJECT(out, am->choice.typeMappings->local);
-        BIO_puts(out, " == ");
-        i2a_ASN1_OBJECT(out, am->choice.typeMappings->remote);
-        break;
+        if (i2a_ASN1_OBJECT(out, am->choice.typeMappings->local) <= 0) {
+            return 0;
+        }
+        if (BIO_puts(out, " == ") <= 0) {
+            return 0;
+        }
+        return i2a_ASN1_OBJECT(out, am->choice.typeMappings->remote);
     }
     case (ATTR_MAP_VALUE): {
         local_type = am->choice.typeValueMappings->local->type;
@@ -59,10 +62,13 @@ static int i2r_ATTRIBUTE_MAPPING(X509V3_EXT_METHOD *method,
         remote_val = am->choice.typeValueMappings->remote->value;
         local_attr_nid = OBJ_obj2nid(local_type);
         remote_attr_nid = OBJ_obj2nid(remote_type);
-        print_attribute_value(out, local_attr_nid, local_val);
-        BIO_puts(out, " == ");
-        print_attribute_value(out, remote_attr_nid, remote_val);
-        break;
+        if (print_attribute_value(out, local_attr_nid, local_val) <= 0) {
+            return 0;
+        }
+        if (BIO_puts(out, " == ") <= 0) {
+            return 0;
+        }
+        return print_attribute_value(out, remote_attr_nid, remote_val);
     }
     default: return 0;
     }
@@ -77,9 +83,15 @@ static int i2r_ATTRIBUTE_MAPPINGS(X509V3_EXT_METHOD *method,
     ATTRIBUTE_MAPPING *am;
     for (i = 0; i < sk_ATTRIBUTE_MAPPING_num(ams); i++) {
         am = sk_ATTRIBUTE_MAPPING_value(ams, i);
-        BIO_printf(out, "%*s", indent, "");
-        i2r_ATTRIBUTE_MAPPING(method, am, out, indent + 4);
-        BIO_puts(out, "\n");
+        if (BIO_printf(out, "%*s", indent, "") <= 0) {
+            return 0;
+        }
+        if (i2r_ATTRIBUTE_MAPPING(method, am, out, indent + 4) <= 0) {
+            return 0;
+        }
+        if (BIO_puts(out, "\n") <= 0) {
+            return 0;
+        }
     }
     return 1;
 }

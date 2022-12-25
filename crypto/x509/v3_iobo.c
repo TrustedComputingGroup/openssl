@@ -13,8 +13,12 @@ static int i2r_IOBO(X509V3_EXT_METHOD *method,
                     GENERAL_NAME *gn, BIO *out,
                     int indent)
 {
-    BIO_printf(out, "%*s", indent, "");
-    GENERAL_NAME_print(out, gn);
+    if (BIO_printf(out, "%*s", indent, "") <= 0) {
+        return 0;
+    }
+    if (GENERAL_NAME_print(out, gn) <= 0) {
+        return 0;
+    }
     return BIO_puts(out, "\n");
 }
 
