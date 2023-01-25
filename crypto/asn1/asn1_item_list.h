@@ -55,6 +55,7 @@ static ASN1_ITEM_EXP *asn1_item_list[] = {
     ASN1_ITEM_ref(CMS_EnvelopedData),
     ASN1_ITEM_ref(CMS_ReceiptRequest),
 #endif
+    ASN1_ITEM_ref(COMMON_CRITERIA_MEASURES),
     ASN1_ITEM_ref(CRL_DIST_POINTS),
 #ifndef OPENSSL_NO_DH
     ASN1_ITEM_ref(DHparams),
@@ -71,6 +72,7 @@ static ASN1_ITEM_EXP *asn1_item_list[] = {
 #endif
     ASN1_ITEM_ref(EDIPARTYNAME),
     ASN1_ITEM_ref(EXTENDED_KEY_USAGE),
+    ASN1_ITEM_ref(FIPS_LEVEL),
     ASN1_ITEM_ref(GENERAL_NAMES),
     ASN1_ITEM_ref(GENERAL_NAME),
     ASN1_ITEM_ref(GENERAL_SUBTREE),
@@ -150,6 +152,8 @@ static ASN1_ITEM_EXP *asn1_item_list[] = {
     ASN1_ITEM_ref(SXNETID),
     ASN1_ITEM_ref(SXNET),
     ASN1_ITEM_ref(TARGETING_INFORMATION),
+    ASN1_ITEM_ref(TBB_SECURITY_ASSERTIONS),
+    ASN1_ITEM_ref(URI_REFERENCE),
     ASN1_ITEM_ref(USERNOTICE),
     ASN1_ITEM_ref(USER_NOTICE_SYNTAX),
     ASN1_ITEM_ref(X509_ACERT),

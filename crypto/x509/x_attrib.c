@@ -12,6 +12,7 @@
 #include <openssl/objects.h>
 #include <openssl/asn1t.h>
 #include <openssl/x509.h>
+#include <openssl/x509v3.h>
 #include "x509_local.h"
 
 /*-
@@ -92,8 +93,14 @@ int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
     const char *ln;
     char objbuf[80];
     ASN1_STRING *str;
-    char *value;
+    unsigned char *value;
     X509_NAME *xn = NULL;
+    PLATFORM_CONFIG *pc = NULL;
+    TCG_PLATFORM_SPEC *ps = NULL;
+    TCG_CRED_TYPE *ct = NULL;
+    MANUFACTURER_ID *mid = NULL;
+    TBB_SECURITY_ASSERTIONS *tbb = NULL;
+    URI_REFERENCE *uri = NULL;
 
     // This switch-case is only for syntaxes that are not encoded as a single
     // primitively-constructed value universal ASN.1 type.
@@ -111,10 +118,8 @@ int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
     case NID_owner:
         value = av->value.sequence->data;
         if ((xn = d2i_X509_NAME(NULL, (const unsigned char**)&(av->value.sequence->data), av->value.sequence->length)) == NULL) {
-            if (BIO_puts(out, "(COULD NOT DECODE DISTINGUISHED NAME)") <= 0) {
-                return 0;
-            }
-            break;
+            BIO_puts(out, "(COULD NOT DECODE DISTINGUISHED NAME)\n");
+            return 0;
         }
         // d2i_ functions increment the ppin pointer. See doc/man3/d2i_X509.pod.
         // This resets the pointer. We don't want to corrupt this value.
@@ -124,6 +129,112 @@ int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
         }
         X509_NAME_free(xn);
         return 1;
+
+    case NID_tcg_at_platformConfiguration_v2:
+        value = av->value.sequence->data;
+        if ((pc = d2i_PLATFORM_CONFIG(NULL, (const unsigned char**)&(av->value.sequence->data), av->value.sequence->length)) == NULL) {
+            BIO_puts(out, "(COULD NOT DECODE PLATFORM CONFIG)\n");
+            return 0;
+        }
+        // d2i_ functions increment the ppin pointer. See doc/man3/d2i_X509.pod.
+        // This resets the pointer. We don't want to corrupt this value.
+        av->value.sequence->data = value;
+        if (PLATFORM_CONFIG_print(out, pc, 8) <= 0) {
+            return 0;
+        }
+        PLATFORM_CONFIG_free(pc);
+        return 1;
+
+    // tCGPlatformSpecification ATTRIBUTE ::= {
+    //     WITH SYNTAX     TCGPlatformSpecification
+    //     ID              tcg-at-tcgPlatformSpecification }
+    case NID_tcg_at_tcgPlatformSpecification:
+        value = av->value.sequence->data;
+        if ((ps = d2i_TCG_PLATFORM_SPEC(NULL, (const unsigned char**)&(av->value.sequence->data), av->value.sequence->length)) == NULL) {
+            BIO_puts(out, "(COULD NOT DECODE PLATFORM SPECIFICATION)\n");
+            return 0;
+        }
+        // d2i_ functions increment the ppin pointer. See doc/man3/d2i_X509.pod.
+        // This resets the pointer. We don't want to corrupt this value.
+        av->value.sequence->data = value;
+        if (TCG_PLATFORM_SPEC_print(out, ps, 8) <= 0) {
+            return 0;
+        }
+        TCG_PLATFORM_SPEC_free(ps);
+        return 1;
+
+    // tCGCredentialType ATTRIBUTE ::= {
+    //     WITH SYNTAX     TCGCredentialType
+    //     ID              tcg-at-tcgCredentialType }
+    case NID_tcg_at_tcgCredentialType:
+        value = av->value.sequence->data;
+        if ((ct = d2i_TCG_CRED_TYPE(NULL, (const unsigned char**)&(av->value.sequence->data), av->value.sequence->length)) == NULL) {
+            BIO_puts(out, "(COULD NOT DECODE PLATFORM CERT CREDENTIAL TYPE)\n");
+            return 0;
+        }
+        // d2i_ functions increment the ppin pointer. See doc/man3/d2i_X509.pod.
+        // This resets the pointer. We don't want to corrupt this value.
+        av->value.sequence->data = value;
+        if (TCG_CRED_TYPE_print(out, ct, 0) <= 0) {
+            return 0;
+        }
+        TCG_CRED_TYPE_free(ct);
+        return 1;
+
+    // platformManufacturerId ATTRIBUTE ::= {
+    //     WITH SYNTAX     ManufacturerId
+    //     ID              tcg-at-platformManufacturerId }
+    case NID_tcg_at_platformManufacturerId:
+        value = av->value.sequence->data;
+        if ((mid = d2i_MANUFACTURER_ID(NULL, (const unsigned char**)&(av->value.sequence->data), av->value.sequence->length)) == NULL) {
+            BIO_puts(out, "(COULD NOT DECODE PLATFORM MANUFACTURER ID)\n");
+            return 0;
+        }
+        // d2i_ functions increment the ppin pointer. See doc/man3/d2i_X509.pod.
+        // This resets the pointer. We don't want to corrupt this value.
+        av->value.sequence->data = value;
+        if (MANUFACTURER_ID_print(out, mid, 0) <= 0) {
+            return 0;
+        }
+        MANUFACTURER_ID_free(mid);
+        return 1;
+
+    // tBBSecurityAssertions ATTRIBUTE ::= {
+    //     WITH SYNTAX     TBBSecurityAssertions
+    //     ID              tcg-at-tbbSecurityAssertions }
+    case NID_tcg_at_tbbSecurityAssertions:
+        value = av->value.sequence->data;
+        if ((tbb = d2i_TBB_SECURITY_ASSERTIONS(NULL, (const unsigned char**)&(av->value.sequence->data), av->value.sequence->length)) == NULL) {
+            BIO_puts(out, "(COULD NOT DECODE TBB SECURITY ASSERTIONS)\n");
+            return 0;
+        }
+        // d2i_ functions increment the ppin pointer. See doc/man3/d2i_X509.pod.
+        // This resets the pointer. We don't want to corrupt this value.
+        av->value.sequence->data = value;
+        if (TBB_SECURITY_ASSERTIONS_print(out, tbb, 8) <= 0) {
+            return 0;
+        }
+        TBB_SECURITY_ASSERTIONS_free(tbb);
+        return 1;
+
+    // platformConfigUri ATTRIBUTE ::= {
+    //     WITH SYNTAX     URIReference
+    //     ID              tcg-at-platformConfigUri }
+    case NID_tcg_at_platformConfigUri:
+        value = av->value.sequence->data;
+        if ((uri = d2i_URI_REFERENCE(NULL, (const unsigned char**)&(av->value.sequence->data), av->value.sequence->length)) == NULL) {
+            BIO_puts(out, "(COULD NOT DECODE TBB SECURITY ASSERTIONS)\n");
+            return 0;
+        }
+        // d2i_ functions increment the ppin pointer. See doc/man3/d2i_X509.pod.
+        // This resets the pointer. We don't want to corrupt this value.
+        av->value.sequence->data = value;
+        if (URI_REFERENCE_print(out, uri, 8) <= 0) {
+            return 0;
+        }
+        URI_REFERENCE_free(uri);
+        return 1;
+
     default: break;
     }
 
