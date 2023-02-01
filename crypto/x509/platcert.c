@@ -135,19 +135,6 @@ ASN1_SEQUENCE(PLATFORM_CONFIG) = {
 
 IMPLEMENT_ASN1_FUNCTIONS(PLATFORM_CONFIG)
 
-static int print_oid (BIO *out, ASN1_OBJECT *oid) {
-    const char *ln;
-    char objbuf[80];
-
-    if (OBJ_obj2txt(objbuf, sizeof(objbuf), oid, 1) <= 0) {
-        return 0;
-    }
-    ln = OBJ_nid2ln(OBJ_obj2nid(oid));
-    return (ln != NULL)
-        ? BIO_printf(out, "%s (%s)", objbuf, ln)
-        : BIO_printf(out, "%s", objbuf);
-}
-
 static int print_hex(BIO *out, unsigned char *buf, int len)
 {
     int i;
@@ -177,19 +164,17 @@ int URI_REFERENCE_print (BIO *out, URI_REFERENCE *value, int indent) {
         if (rc <= 0) return rc;
         rc = print_hex(out, value->hashValue->data, value->hashValue->length);
         if (rc <= 0) return rc;
-        rc = BIO_puts(out, "\n");
-        if (rc <= 0) return rc;
     }
     return rc;
 }
 
 static ENUMERATED_NAMES measurement_root_types[] = {
-    {MEASUREMENT_ROOT_TYPE_STATIC, "Static", "static"},
-    {MEASUREMENT_ROOT_TYPE_DYNAMIC, "Dynamic", "dynamic"},
-    {MEASUREMENT_ROOT_TYPE_NONHOST, "Non-Host", "nonHost"},
-    {MEASUREMENT_ROOT_TYPE_HYBRID, "Hybrid", "hybrid"},
-    {MEASUREMENT_ROOT_TYPE_PHYSICAL, "Physical", "physical"},
-    {MEASUREMENT_ROOT_TYPE_VIRTUAL, "Virtual", "virtual"},
+    {MEASUREMENT_ROOT_TYPE_STATIC, "Static (0)", "static"},
+    {MEASUREMENT_ROOT_TYPE_DYNAMIC, "Dynamic (1)", "dynamic"},
+    {MEASUREMENT_ROOT_TYPE_NONHOST, "Non-Host (2)", "nonHost"},
+    {MEASUREMENT_ROOT_TYPE_HYBRID, "Hybrid (3)", "hybrid"},
+    {MEASUREMENT_ROOT_TYPE_PHYSICAL, "Physical (4)", "physical"},
+    {MEASUREMENT_ROOT_TYPE_VIRTUAL, "Virtual (5)", "virtual"},
     {-1, NULL, NULL},
 };
 
@@ -205,16 +190,16 @@ static ENUMERATED_NAMES evaluation_assurance_levels[] = {
 };
 
 static ENUMERATED_NAMES evaluation_statuses[] = {
-    {EVALUATION_STATUS_DESIGNED_TO_MEET, "Designed To Meet", "designedToMeet"},
-    {EVALUATION_STATUS_EVAL_IN_PROGRESS, "Evaluation In Progress", "evaluationInProgress"},
-    {EVALUATION_STATUS_EVAL_COMPLETED, "Evaluation Completed", "evaluationCompleted"},
+    {EVALUATION_STATUS_DESIGNED_TO_MEET, "Designed To Meet (0)", "designedToMeet"},
+    {EVALUATION_STATUS_EVAL_IN_PROGRESS, "Evaluation In Progress (1)", "evaluationInProgress"},
+    {EVALUATION_STATUS_EVAL_COMPLETED, "Evaluation Completed (2)", "evaluationCompleted"},
     {-1, NULL, NULL},
 };
 
 static ENUMERATED_NAMES strengths_of_function[] = {
-    {STRENGTH_OF_FUNCTION_BASIC, "Basic", "basic"},
-    {STRENGTH_OF_FUNCTION_MEDIUM, "Medium", "medium"},
-    {STRENGTH_OF_FUNCTION_HIGH, "High", "high"},
+    {STRENGTH_OF_FUNCTION_BASIC, "Basic (0)", "basic"},
+    {STRENGTH_OF_FUNCTION_MEDIUM, "Medium (1)", "medium"},
+    {STRENGTH_OF_FUNCTION_HIGH, "High (2)", "high"},
     {-1, NULL, NULL},
 };
 
@@ -227,9 +212,9 @@ static ENUMERATED_NAMES security_levels[] = {
 };
 
 static ENUMERATED_NAMES attribute_statuses[] = {
-    {ATTRIBUTE_STATUS_ADDED, "Added", "added"},
-    {ATTRIBUTE_STATUS_MODIFIED, "Modified", "modified"},
-    {ATTRIBUTE_STATUS_REMOVED, "Removed", "removed"},
+    {ATTRIBUTE_STATUS_ADDED, "Added (0)", "added"},
+    {ATTRIBUTE_STATUS_MODIFIED, "Modified (1)", "modified"},
+    {ATTRIBUTE_STATUS_REMOVED, "Removed (2)", "removed"},
     {-1, NULL, NULL},
 };
 
@@ -248,13 +233,6 @@ int COMPONENT_CLASS_print (BIO *out, COMPONENT_CLASS *value, int indent) {
     if (rc <= 0) return rc;
     return BIO_puts(out, "\n");
 }
-
-// TODO: Pass in indent to print_attribute_value()
-// TODO: OIDs print () if the name cannot be determined
-// TODO: Print integer next to enum values
-// TODO: Doube check enum name indexing.
-// TODO: Make sure SEQUENCE printers will all missing fields still return 1.
-// TODO: Print numbers next to SEQUENCE OF / SET OF values (e.g. #1, #2...)
 
 int COMMON_CRITERIA_MEASURES_print (BIO *out,
                                     COMMON_CRITERIA_MEASURES *value,
@@ -361,7 +339,7 @@ int FIPS_LEVEL_print (BIO *out, FIPS_LEVEL *value, int indent) {
         if (int_val > 4) {
             rc = BIO_printf(out, "%ld\n", int_val);
         } else {
-            rc = BIO_printf(out, "%s\n", security_levels[int_val].lname);
+            rc = BIO_printf(out, "%s\n", security_levels[int_val - 1].lname);
         }
         if (rc <= 0) return rc;
     }
@@ -374,7 +352,7 @@ int FIPS_LEVEL_print (BIO *out, FIPS_LEVEL *value, int indent) {
 }
 
 int TBB_SECURITY_ASSERTIONS_print (BIO *out, TBB_SECURITY_ASSERTIONS *value, int indent) {
-    int rc;
+    int rc = 1; /* All fields are OPTIONAL, so we start off at 1 in case all are omitted. */
     int64_t int_val;
 
     if (value->version != NULL) {
@@ -460,7 +438,7 @@ int TCG_PLATFORM_SPEC_print (BIO *out, TCG_PLATFORM_SPEC *value) {
 
     rc = TCG_SPEC_VERSION_print(out, value->version);
     if (rc <= 0) return rc;
-    rc = BIO_puts(out, ":");
+    rc = BIO_puts(out, " : ");
     if (rc <= 0) return rc;
     return print_hex(out, value->platformClass->data, value->platformClass->length);
 }
@@ -498,7 +476,7 @@ int PLATFORM_PROPERTY_print (BIO *out, PLATFORM_PROPERTY *value, int indent) {
         rc = BIO_printf(out, "%*sStatus: ", indent, "");
         if (rc <= 0) return rc;
         if (!ASN1_ENUMERATED_get_int64(&int_val, value->status)
-            || int_val <= 0
+            || int_val < 0
             || int_val > INT_MAX)
             return -1;
         if (int_val > 2) {
@@ -561,7 +539,8 @@ int CERTIFICATE_IDENTIFIER_print (BIO *out, CERTIFICATE_IDENTIFIER *value, int i
             BIO_printf(out, "%*sIssuer UID: ", indent + 4, "");
             if (i2a_ASN1_STRING(out, iss->issuerUID, V_ASN1_BIT_STRING) <= 0)
                 return 0;
-            BIO_puts(out, "\n");
+            rc = BIO_puts(out, "\n");
+            if (rc <= 0) return rc;
         }
     }
     return 1;
@@ -633,6 +612,8 @@ int COMPONENT_IDENTIFIER_print (BIO *out, COMPONENT_IDENTIFIER *value, int inden
         if (rc <= 0) return rc;
         rc = URI_REFERENCE_print(out, value->componentPlatformCertUri, indent + 4);
         if (rc <= 0) return rc;
+        rc = BIO_puts(out, "\n");
+        if (rc <= 0) return rc;
     }
     if (value->status != NULL) {
         rc = BIO_printf(out, "%*sStatus: ", indent, "");
@@ -652,14 +633,14 @@ int COMPONENT_IDENTIFIER_print (BIO *out, COMPONENT_IDENTIFIER *value, int inden
 }
 
 int PLATFORM_CONFIG_print (BIO *out, PLATFORM_CONFIG *value, int indent) {
-    int rc, i;
+    int rc = 1, i; /* All fields are OPTIONAL, so we start off rc at 1 in case all are omitted. */
     COMPONENT_IDENTIFIER *cid;
     PLATFORM_PROPERTY *p;
 
     if (value->componentIdentifiers) {
-        rc = BIO_printf(out, "%*sComponent Addresses:\n", indent, "");
+        rc = BIO_printf(out, "%*sComponent Identifiers:\n", indent, "");
         for (i = 0; i < sk_COMPONENT_IDENTIFIER_num(value->componentIdentifiers); i++) {
-            rc = BIO_printf(out, "%*sComponent Address:\n", indent + 4, "");
+            rc = BIO_printf(out, "%*sComponent Identifier:\n", indent + 4, "");
             if (rc <= 0) return rc;
             cid = sk_COMPONENT_IDENTIFIER_value(value->componentIdentifiers, i);
             rc = COMPONENT_IDENTIFIER_print(out, cid, indent + 8);
@@ -683,8 +664,6 @@ int PLATFORM_CONFIG_print (BIO *out, PLATFORM_CONFIG *value, int indent) {
             if (rc <= 0) return rc;
             p = sk_PLATFORM_PROPERTY_value(value->platformProperties, i);
             rc = PLATFORM_PROPERTY_print(out, p, indent + 8);
-            if (rc <= 0) return rc;
-            rc = BIO_puts(out, "\n");
             if (rc <= 0) return rc;
         }
     }

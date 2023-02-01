@@ -88,13 +88,14 @@ int print_hex(BIO *out, unsigned char *buf, int len)
     return 1;
 }
 
-int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
+int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av, int indent)
 {
     const char *ln;
     char objbuf[80];
     ASN1_STRING *str;
     unsigned char *value;
     X509_NAME *xn = NULL;
+    int64_t int_val;
     PLATFORM_CONFIG *pc = NULL;
     TCG_PLATFORM_SPEC *ps = NULL;
     TCG_CRED_TYPE *ct = NULL;
@@ -124,7 +125,7 @@ int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
         // d2i_ functions increment the ppin pointer. See doc/man3/d2i_X509.pod.
         // This resets the pointer. We don't want to corrupt this value.
         av->value.sequence->data = value;
-        if (X509_NAME_print_ex(out, xn, 0, 0) <= 0) {
+        if (X509_NAME_print_ex(out, xn, indent, 0) <= 0) {
             return 0;
         }
         X509_NAME_free(xn);
@@ -139,16 +140,16 @@ int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
         // d2i_ functions increment the ppin pointer. See doc/man3/d2i_X509.pod.
         // This resets the pointer. We don't want to corrupt this value.
         av->value.sequence->data = value;
-        if (PLATFORM_CONFIG_print(out, pc, 8) <= 0) {
+        if (PLATFORM_CONFIG_print(out, pc, indent) <= 0) {
             return 0;
         }
         PLATFORM_CONFIG_free(pc);
         return 1;
 
-    // tCGPlatformSpecification ATTRIBUTE ::= {
-    //     WITH SYNTAX     TCGPlatformSpecification
-    //     ID              tcg-at-tcgPlatformSpecification }
     case NID_tcg_at_tcgPlatformSpecification:
+        if (BIO_printf(out, "%*s", indent, "") <= 0) {
+            return 0;
+        }
         value = av->value.sequence->data;
         if ((ps = d2i_TCG_PLATFORM_SPEC(NULL, (const unsigned char**)&(av->value.sequence->data), av->value.sequence->length)) == NULL) {
             BIO_puts(out, "(COULD NOT DECODE PLATFORM SPECIFICATION)\n");
@@ -157,15 +158,12 @@ int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
         // d2i_ functions increment the ppin pointer. See doc/man3/d2i_X509.pod.
         // This resets the pointer. We don't want to corrupt this value.
         av->value.sequence->data = value;
-        if (TCG_PLATFORM_SPEC_print(out, ps, 8) <= 0) {
+        if (TCG_PLATFORM_SPEC_print(out, ps) <= 0) {
             return 0;
         }
         TCG_PLATFORM_SPEC_free(ps);
         return 1;
 
-    // tCGCredentialType ATTRIBUTE ::= {
-    //     WITH SYNTAX     TCGCredentialType
-    //     ID              tcg-at-tcgCredentialType }
     case NID_tcg_at_tcgCredentialType:
         value = av->value.sequence->data;
         if ((ct = d2i_TCG_CRED_TYPE(NULL, (const unsigned char**)&(av->value.sequence->data), av->value.sequence->length)) == NULL) {
@@ -175,15 +173,12 @@ int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
         // d2i_ functions increment the ppin pointer. See doc/man3/d2i_X509.pod.
         // This resets the pointer. We don't want to corrupt this value.
         av->value.sequence->data = value;
-        if (TCG_CRED_TYPE_print(out, ct, 0) <= 0) {
+        if (TCG_CRED_TYPE_print(out, ct, indent) <= 0) {
             return 0;
         }
         TCG_CRED_TYPE_free(ct);
         return 1;
 
-    // platformManufacturerId ATTRIBUTE ::= {
-    //     WITH SYNTAX     ManufacturerId
-    //     ID              tcg-at-platformManufacturerId }
     case NID_tcg_at_platformManufacturerId:
         value = av->value.sequence->data;
         if ((mid = d2i_MANUFACTURER_ID(NULL, (const unsigned char**)&(av->value.sequence->data), av->value.sequence->length)) == NULL) {
@@ -193,15 +188,12 @@ int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
         // d2i_ functions increment the ppin pointer. See doc/man3/d2i_X509.pod.
         // This resets the pointer. We don't want to corrupt this value.
         av->value.sequence->data = value;
-        if (MANUFACTURER_ID_print(out, mid, 0) <= 0) {
+        if (MANUFACTURER_ID_print(out, mid, indent) <= 0) {
             return 0;
         }
         MANUFACTURER_ID_free(mid);
         return 1;
 
-    // tBBSecurityAssertions ATTRIBUTE ::= {
-    //     WITH SYNTAX     TBBSecurityAssertions
-    //     ID              tcg-at-tbbSecurityAssertions }
     case NID_tcg_at_tbbSecurityAssertions:
         value = av->value.sequence->data;
         if ((tbb = d2i_TBB_SECURITY_ASSERTIONS(NULL, (const unsigned char**)&(av->value.sequence->data), av->value.sequence->length)) == NULL) {
@@ -211,15 +203,12 @@ int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
         // d2i_ functions increment the ppin pointer. See doc/man3/d2i_X509.pod.
         // This resets the pointer. We don't want to corrupt this value.
         av->value.sequence->data = value;
-        if (TBB_SECURITY_ASSERTIONS_print(out, tbb, 8) <= 0) {
+        if (TBB_SECURITY_ASSERTIONS_print(out, tbb, indent) <= 0) {
             return 0;
         }
         TBB_SECURITY_ASSERTIONS_free(tbb);
         return 1;
 
-    // platformConfigUri ATTRIBUTE ::= {
-    //     WITH SYNTAX     URIReference
-    //     ID              tcg-at-platformConfigUri }
     case NID_tcg_at_platformConfigUri:
         value = av->value.sequence->data;
         if ((uri = d2i_URI_REFERENCE(NULL, (const unsigned char**)&(av->value.sequence->data), av->value.sequence->length)) == NULL) {
@@ -229,7 +218,7 @@ int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
         // d2i_ functions increment the ppin pointer. See doc/man3/d2i_X509.pod.
         // This resets the pointer. We don't want to corrupt this value.
         av->value.sequence->data = value;
-        if (URI_REFERENCE_print(out, uri, 8) <= 0) {
+        if (URI_REFERENCE_print(out, uri, indent) <= 0) {
             return 0;
         }
         URI_REFERENCE_free(uri);
@@ -241,37 +230,54 @@ int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
     switch (av->type) {
     case V_ASN1_BOOLEAN:
         if (av->value.boolean) {
-            return BIO_puts(out, "TRUE");
+            return BIO_printf(out, "%*sTRUE", indent, "");
         } else {
-            return BIO_puts(out, "FALSE");
+            return BIO_printf(out, "%*sFALSE", indent, "");
         }
 
     case V_ASN1_INTEGER:
+        if (BIO_printf(out, "%*s", indent, "") <= 0) {
+            return 0;
+        }
+        if (ASN1_INTEGER_get_int64(&int_val, av->value.integer) > 0) {
+            return BIO_printf(out, "%ld", int_val);
+        } else {
+            return ASN1_INTEGER_print_bio(out, str);
+        }
+
     case V_ASN1_ENUMERATED:
-        str = av->value.integer;
-        return ASN1_INTEGER_print_bio(out, str);
+        if (BIO_printf(out, "%*s", indent, "") <= 0) {
+            return 0;
+        }
+        if (ASN1_ENUMERATED_get_int64(&int_val, av->value.enumerated) > 0) {
+            return BIO_printf(out, "%ld", int_val);
+        } else {
+            return ASN1_INTEGER_print_bio(out, str);
+        }
 
     case V_ASN1_BIT_STRING:
+        if (BIO_printf(out, "%*s", indent, "") <= 0) {
+            return 0;
+        }
         return print_hex(out, av->value.bit_string->data,
                  av->value.bit_string->length);
 
     case V_ASN1_OCTET_STRING:
     case V_ASN1_VIDEOTEXSTRING:
+        if (BIO_printf(out, "%*s", indent, "") <= 0) {
+            return 0;
+        }
         return print_hex(out, av->value.octet_string->data,
                  av->value.octet_string->length);
 
     case V_ASN1_NULL:
-        return BIO_puts(out, "NULL");
+        return BIO_printf(out, "%*sNULL", indent, "");
 
     case V_ASN1_OBJECT:
-        /* Does this need to be freed? */
-        ln = OBJ_nid2ln(OBJ_obj2nid(av->value.object));
-        if (!ln)
-            ln = "";
-        if (OBJ_obj2txt(objbuf, sizeof(objbuf), av->value.object, 1) <= 0) {
+        if (BIO_printf(out, "%*s", indent, "") <= 0) {
             return 0;
         }
-        return BIO_printf(out, "%s (%s)", ln, objbuf);
+        return print_oid(out, av->value.object);
     
     /* ObjectDescriptor is an IMPLICIT GraphicString, but GeneralString is a
     superset supported by OpenSSL, so we will use that anywhere a GraphicString
@@ -279,29 +285,31 @@ int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
     case V_ASN1_GENERALSTRING:
     case V_ASN1_GRAPHICSTRING:
     case V_ASN1_OBJECT_DESCRIPTOR:
-        return BIO_printf(out, "%.*s", av->value.generalstring->length,
-                av->value.generalstring->data);
+        return BIO_printf(out, "%*s%.*s", indent, "",
+                          av->value.generalstring->length,
+                          av->value.generalstring->data);
 
     /* EXTERNAL */
     /* EMBEDDED PDV */
 
     case V_ASN1_UTF8STRING:
-        return BIO_printf(out, "%.*s", av->value.utf8string->length,
-                   av->value.utf8string->data);
+        return BIO_printf(out, "%*s%.*s", indent, "",
+                          av->value.utf8string->length,
+                          av->value.utf8string->data);
 
     case V_ASN1_REAL:
-        return BIO_puts(out, "REAL");
+        return BIO_printf(out, "%*sREAL", indent, "");
 
     /* RELATIVE-OID */
     /* TIME */
 
     case V_ASN1_SEQUENCE:
         return ASN1_parse_dump(out, av->value.sequence->data,
-                        av->value.sequence->length, 0, 1);
+                        av->value.sequence->length, indent, 1);
 
     case V_ASN1_SET:
         return ASN1_parse_dump(out, av->value.set->data,
-                av->value.set->length, 0, 1);
+                av->value.set->length, indent, 1);
 
     /*
         UTCTime ::= [UNIVERSAL 23] IMPLICIT VisibleString
@@ -312,20 +320,24 @@ int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
     case V_ASN1_UTCTIME:
     case V_ASN1_GENERALIZEDTIME:
     case V_ASN1_NUMERICSTRING:
-        return BIO_printf(out, "%.*s", av->value.visiblestring->length,
-                   av->value.visiblestring->data);
+        return BIO_printf(out, "%*s%.*s", indent, "",
+                          av->value.visiblestring->length,
+                          av->value.visiblestring->data);
 
     case V_ASN1_PRINTABLESTRING:
-        return BIO_printf(out, "%.*s", av->value.printablestring->length,
-            av->value.printablestring->data);
+        return BIO_printf(out, "%*s%.*s", indent, "",
+                          av->value.printablestring->length,
+                          av->value.printablestring->data);
 
     case V_ASN1_T61STRING:
-        return BIO_printf(out, "%.*s", av->value.t61string->length,
-            av->value.t61string->data);
+        return BIO_printf(out, "%*s%.*s", indent, "",
+                          av->value.t61string->length,
+                          av->value.t61string->data);
 
     case V_ASN1_IA5STRING:
-        return BIO_printf(out, "%.*s", av->value.ia5string->length,
-            av->value.ia5string->data);
+        return BIO_printf(out, "%*s%.*s", indent, "",
+                          av->value.ia5string->length,
+                          av->value.ia5string->data);
 
     /* UniversalString */
     /* CHARACTER STRING */
@@ -333,7 +345,7 @@ int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
     case V_ASN1_BMPSTRING:
         value = OPENSSL_uni2asc(av->value.bmpstring->data,
                                 av->value.bmpstring->length);
-        int ret = BIO_printf(out, "%s", value);
+        int ret = BIO_printf(out, "%*s%s", indent, "", value);
         OPENSSL_free(value);
         return ret;
 
@@ -346,6 +358,6 @@ int print_attribute_value(BIO *out, int obj_nid, const ASN1_TYPE *av)
 
     /* Would it be approriate to just hexdump? */
     default:
-        return BIO_printf(out, "<Unsupported tag %d>", av->type);
+        return BIO_printf(out, "%*s<Unsupported tag %d>", indent, "", av->type);
     }
 }
