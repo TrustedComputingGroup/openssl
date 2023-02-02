@@ -1856,3 +1856,70 @@ oracle 746875 1 1 : oracle-jdk-trustedkeyusage : Trusted key usage (Oracle)
 # NID for compression
                             : brotli : Brotli compression
 			    : zstd : Zstandard compression
+
+2 23 133 : tcg 		: Trusted Computing Group
+
+tcg 1  : tcg-tcpaSpecVersion
+tcg 2  : tcg-attribute 			: Trusted Computing Group Attributes
+tcg 3  : tcg-protocol 			: Trusted Computing Group Protocols
+tcg 4  : tcg-algorithm 			: Trusted Computing Group Algorithms
+tcg 5  : tcg-platformClass 		: Trusted Computing Group Platform Classes
+tcg 6  : tcg-ce 				: Trusted Computing Group Certificate Extensions
+tcg 8  : tcg-kp 				: Trusted Computing Group Key Purposes
+tcg 17 : tcg-address 			: Trusted Computing Group Address Formats
+tcg 18 : tcg-registry 			: Trusted Computing Group Registry
+
+tcg-platformClass 1 : tcg-common 							: TCG Common
+tcg-common 1		: tcg-at-platformManufacturerStr		: TCG Platform Manufacturer String
+tcg-common 2		: tcg-at-platformManufacturerId			: TCG Platform Manufacturer ID
+tcg-common 3		: tcg-at-platformConfigUri				: TCG Platform Configuration URI
+tcg-common 4		: tcg-at-platformModel					: TCG Platform Model
+tcg-common 5		: tcg-at-platformVersion				: TCG Platform Version
+tcg-common 6		: tcg-at-platformSerial					: TCG Platform Serial Number
+tcg-common 7		: tcg-at-platformConfiguration			: TCG Platform Configuration
+
+tcg-attribute 1		: tcg-at-tpmManufacturer			: TPM Manufacturer
+tcg-attribute 2		: tcg-at-tpmModel					: TPM Model
+tcg-attribute 3		: tcg-at-tpmVersion 				: TPM Version
+tcg-attribute 10	: tcg-at-securityQualities			: Security Qualities
+tcg-attribute 11	: tcg-at-tpmProtectionProfile		: TPM Protection Profile
+tcg-attribute 12	: tcg-at-tpmSecurityTarget 			: TPM Security Target
+tcg-attribute 13	: tcg-at-tbbProtectionProfile		: TBB Protection Profile
+tcg-attribute 14	: tcg-at-tbbSecurityTarget			: TBB Security Target
+tcg-attribute 15	: tcg-at-tpmIdLabel					: TPM ID Label
+tcg-attribute 16	: tcg-at-tpmSpecification			: TPM Specification
+tcg-attribute 17	: tcg-at-tcgPlatformSpecification	: TPM Platform Specification
+tcg-attribute 18	: tcg-at-tpmSecurityAssertions		: TPM Security Assertions
+tcg-attribute 19	: tcg-at-tbbSecurityAssertions		: TBB Security Assertions
+tcg-attribute 23	: tcg-at-tcgCredentialSpecification	: TCG Credential Specification
+tcg-attribute 25	: tcg-at-tcgCredentialType			: TCG Credential Type
+
+tcg-at-platformConfiguration 1 : tcg-at-platformConfiguration-v1 : Platform Configuration Version 1
+tcg-at-platformConfiguration 2 : tcg-at-platformConfiguration-v2 : Platform Configuration Version 2
+
+tcg-algorithm 1 : tcg-algorithm-null : TCG NULL Algorithm
+
+tcg-kp 1 : tcg-kp-EKCertificate 					: Endorsement Key Certificate
+tcg-kp 2 : tcg-kp-PlatformAttributeCertificate 		: Platform Attribute Certificate
+tcg-kp 3 : tcg-kp-AIKCertificate 					: Attestation Identity Key Certificate
+tcg-kp 4 : tcg-kp-PlatformKeyCertificate 			: Platform Key Certificate
+tcg-kp 5 : tcg-kp-DeltaPlatformAttributeCertificate : Delta Platform Attribute Certificate
+
+tcg-ce 2 : tcg-ce-relevantCredentials						: Relevant Credentials
+tcg-ce 3 : tcg-ce-relevantManifests							: Relevant Manifests
+tcg-ce 4 : tcg-ce-virtualPlatformAttestationService			: Virtual Platform Attestation Service
+tcg-ce 5 : tcg-ce-migrationControllerAttestationService		: Migration Controller Attestation Service
+tcg-ce 6 : tcg-ce-migrationControllerRegistrationService	: Migration Controller Registration Service
+tcg-ce 7 : tcg-ce-virtualPlatformBackupService				: Virtual Platform Backup Service
+
+tcg-protocol 1 : tcg-prt-tpmIdProtocol : TCG TPM Protocol
+
+tcg-address 1 : tcg-address-ethernetmac		: Ethernet MAC Address
+tcg-address 2 : tcg-address-wlanmac			: WLAN MAC Address
+tcg-address 3 : tcg-address-bluetoothmac	: Bluetooth MAC Address
+
+tcg-registry 3 : tcg-registry-componentClass : TCG Component Class
+
+tcg-registry-componentClass 1 : tcg-registry-componentClass-tcg		: Trusted Computed Group Registry
+tcg-registry-componentClass 2 : tcg-registry-componentClass-ietf	: Internet Engineering Task Force Registry
+tcg-registry-componentClass 3 : tcg-registry-componentClass-dmtf	: Distributed Management Task Force Registry

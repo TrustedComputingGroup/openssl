@@ -62,13 +62,25 @@ static int i2r_ATTRIBUTE_MAPPING(X509V3_EXT_METHOD *method,
         remote_val = am->choice.typeValueMappings->remote->value;
         local_attr_nid = OBJ_obj2nid(local_type);
         remote_attr_nid = OBJ_obj2nid(remote_type);
-        if (print_attribute_value(out, local_attr_nid, local_val) <= 0) {
+        if (i2a_ASN1_OBJECT(out, local_type) <= 0) {
+            return 0;
+        }
+        if (BIO_puts(out, ":") <= 0) {
+            return 0;
+        }
+        if (print_attribute_value(out, local_attr_nid, local_val, 0) <= 0) {
             return 0;
         }
         if (BIO_puts(out, " == ") <= 0) {
             return 0;
         }
-        return print_attribute_value(out, remote_attr_nid, remote_val);
+        if (i2a_ASN1_OBJECT(out, remote_type) <= 0) {
+            return 0;
+        }
+        if (BIO_puts(out, ":") <= 0) {
+            return 0;
+        }
+        return print_attribute_value(out, remote_attr_nid, remote_val, 0);
     }
     default: return 0;
     }

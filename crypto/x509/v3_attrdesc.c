@@ -57,7 +57,7 @@ static int i2r_HASH(X509V3_EXT_METHOD *method,
         if (BIO_printf(out, "%*sParameter: ", indent, "") <= 0) {
             return 0;
         }
-        if (print_attribute_value(out, 0, hash->algorithmIdentifier->parameter) <= 0) {
+        if (print_attribute_value(out, 0, hash->algorithmIdentifier->parameter, indent + 4) <= 0) {
             return 0;
         }
         if (BIO_puts(out, "\n") <= 0) {
