@@ -56,12 +56,33 @@ int ossl_x509_check_acert_time(X509_STORE_CTX *ctx, X509_ACERT *acert)
     return X509_V_OK;
 }
 
+int ossl_x509_check_acert_exts(X509_ACERT *acert)
+{
+    int i;
+    X509_EXTENSION *time_spec_ext;
+    TIME_SPEC *time_spec;
+
+    i = X509_acert_get_ext_by_NID(acert, NID_time_specification, -1);
+    if (i >= 0) {
+        time_spec_ext = X509_acert_get_ext(acert, i);
+        if (time_spec_ext != NULL) {
+            time_spec = X509V3_EXT_d2i(time_spec_ext);
+            if (time_spec == NULL)
+                return X509_V_ERR_INVALID_EXTENSION;
+            // TODO: Verify time specification
+        }
+    }
+
+    return X509_V_OK;
+}
+
 int X509_attr_cert_verify(X509_STORE_CTX *ctx, X509_ACERT *acert)
 {
     int rc;
     int pki_depth;
     EVP_PKEY *pkey;
     X509 *subj_pkc;
+
 
     if (X509_ALGOR_cmp(&acert->sig_alg, &acert->signature) != 0)
         return 0;
@@ -83,7 +104,9 @@ int X509_attr_cert_verify(X509_STORE_CTX *ctx, X509_ACERT *acert)
     if (rc != X509_V_OK)
         return rc;
 
-    // TODO: verify time specification
+    rc = ossl_x509_check_acert_exts(acert);
+    if (rc != X509_V_OK)
+        return rc;
 
     return X509_V_OK;
 }
