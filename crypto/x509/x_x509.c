@@ -327,11 +327,6 @@ OSSL_ISSUER_SERIAL *X509_get_issuer_serial (X509 *x)
     GENERAL_NAME *gn = GENERAL_NAME_new();
     gn->type = GEN_DIRNAME;
     gn->d.dirn = x->cert_info.issuer;
-    // {
-    //     GEN_DIRNAME,
-    //     x->cert_info.issuer
-    // };
-
     if (sk_GENERAL_NAME_push(issuer, gn) <= 0)
         return NULL;
 
@@ -342,10 +337,5 @@ OSSL_ISSUER_SERIAL *X509_get_issuer_serial (X509 *x)
     iss_ser->issuer = issuer;
     iss_ser->serial = serial;
     iss_ser->issuerUID = issuerUID;
-    // {
-    //     issuer,
-    //     serial,
-    //     issuerUID,
-    // };
     return iss_ser;
 }
