@@ -27,6 +27,7 @@
 #include "crypto/pkcs7.h"
 #include "crypto/x509.h"
 #include "crypto/x509_acert.h"
+#include "openssl/x509_acert.h"
 #include "crypto/rsa.h"
 
 int X509_verify(X509 *a, EVP_PKEY *r)
@@ -166,17 +167,19 @@ X509_CRL *X509_CRL_load_http(const char *url, BIO *bio, BIO *rbio, int timeout)
 
 int X509_ACERT_sign(X509_ACERT *x, EVP_PKEY *pkey, const EVP_MD *md)
 {
-    return ASN1_item_sign_ex(ASN1_ITEM_rptr(X509_ACERT_INFO), &x->sig_alg,
-                             &x->acinfo->signature,
+    x->acinfo->enc.modified = 1;
+    return ASN1_item_sign_ex(ASN1_ITEM_rptr(X509_ACERT_INFO), &x->acinfo->signature,
+                            &x->sig_alg,
                              &x->signature, x->acinfo, NULL,
                              pkey, md, NULL, NULL);
 }
 
 int X509_ACERT_sign_ctx(X509_ACERT *x, EVP_MD_CTX *ctx)
 {
-    return ASN1_item_sign_ctx(ASN1_ITEM_rptr(X509_ACERT_INFO),
-                              &x->sig_alg, &x->acinfo->signature, &x->signature,
-                              &x->acinfo, ctx);
+    x->acinfo->enc.modified = 1;
+    return ASN1_item_sign_ctx(ASN1_ITEM_rptr(X509_ACERT_INFO), &x->acinfo->signature,
+                              &x->sig_alg, &x->signature,
+                              x->acinfo, ctx);
 }
 
 int NETSCAPE_SPKI_sign(NETSCAPE_SPKI *x, EVP_PKEY *pkey, const EVP_MD *md)

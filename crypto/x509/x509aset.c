@@ -10,7 +10,7 @@
 #include <openssl/err.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
-#include "x509_acert.h"
+#include <crypto/x509_acert.h>
 
 static int replace_gentime(ASN1_STRING **dest, ASN1_GENERALIZEDTIME *src)
 {

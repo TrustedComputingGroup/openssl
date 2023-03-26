@@ -9,21 +9,19 @@
 
 #ifndef OSSL_CRYPTO_X509_ACERT_H
 # define OSSL_CRYPTO_X509_ACERT_H
+# include "openssl/x509.h"
+# include "openssl/types.h"
+# include "internal/refcount.h"
 
-# include <openssl/x509_acert.h>
+# define X509_ACERT_ISSUER_V1 0
+# define X509_ACERT_ISSUER_V2 1
 
-struct ossl_object_digest_info_st {
+typedef struct ossl_object_digest_info_st {
     ASN1_ENUMERATED *digestedObjectType;
     ASN1_OBJECT *otherObjectTypeID;
     X509_ALGOR *digestAlgorithm;
     ASN1_BIT_STRING *objectDigest;
-};
-
-struct ossl_issuer_serial_st {
-    STACK_OF(GENERAL_NAME) *issuer;
-    ASN1_INTEGER serial;
-    ASN1_BIT_STRING *issuerUID;
-};
+} OSSL_OBJECT_DIGEST_INFO;
 
 typedef struct X509_acert_issuer_v2form_st {
     STACK_OF(GENERAL_NAME) *issuerName;
@@ -45,7 +43,7 @@ typedef struct X509_holder_st {
     OSSL_OBJECT_DIGEST_INFO *objectDigestInfo;
 } X509_HOLDER;
 
-struct X509_acert_info_st {
+typedef struct X509_acert_info_st {
     ASN1_INTEGER version;      /* default of v2 */
     X509_HOLDER holder;
     X509_ACERT_ISSUER issuer;
@@ -55,11 +53,14 @@ struct X509_acert_info_st {
     STACK_OF(X509_ATTRIBUTE) *attributes;
     ASN1_BIT_STRING *issuerUID;
     X509_EXTENSIONS *extensions;
-};
+    ASN1_ENCODING enc;                      /* encoding of signed portion of CRL */
+} X509_ACERT_INFO;
 
-struct X509_acert_st {
+typedef struct X509_acert_st {
     X509_ACERT_INFO *acinfo;
     X509_ALGOR sig_alg;
     ASN1_BIT_STRING signature;
-};
+    CRYPTO_REF_COUNT references;
+    CRYPTO_RWLOCK *lock;
+} X509_ACERT;
 #endif
