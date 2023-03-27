@@ -16,6 +16,7 @@
 int create_platform_specification (X509_ATTRIBUTE **pattr) {
     X509_ATTRIBUTE *attr;
     unsigned char *der = NULL;
+    ASN1_STRING *seq = NULL;
 
     ASN1_INTEGER *majorVersion = ASN1_INTEGER_new();
     ASN1_INTEGER *minorVersion = ASN1_INTEGER_new();
@@ -39,31 +40,44 @@ int create_platform_specification (X509_ATTRIBUTE **pattr) {
     TCG_PLATFORM_SPEC *platspec = TCG_PLATFORM_SPEC_new();
     platspec->version = specver;
     platspec->platformClass = plat_class;
-    if (i2d_TCG_PLATFORM_SPEC(platspec, &der) <= 0) {
+
+    if ((seq = ASN1_STRING_new()) == NULL) {
+        return -32;
+    }
+    seq->length = i2d_TCG_PLATFORM_SPEC(platspec, &der);
+    if (seq->length <= 0) {
         return -4;
     }
-    attr = X509_ATTRIBUTE_create(NID_tcg_at_tcgPlatformSpecification, V_ASN1_SEQUENCE, der);
+    seq->data = der;
+    attr = X509_ATTRIBUTE_create(NID_tcg_at_tcgPlatformSpecification, V_ASN1_SEQUENCE, seq);
     if (attr == NULL) {
         return -5;
     }
-    pattr = &attr;
+    (*pattr) = attr;
     return 0;
 }
 
 int create_credential_type (X509_ATTRIBUTE **pattr) {
     X509_ATTRIBUTE *attr;
     unsigned char *der = NULL;
+    ASN1_STRING *seq = NULL;
 
     TCG_CRED_TYPE *credtype = TCG_CRED_TYPE_new();
     credtype->certificateType = OBJ_nid2obj(NID_tcg_kp_PlatformAttributeCertificate);
-    if (i2d_TCG_CRED_TYPE(credtype, &der) <= 0) {
-        return -1;
+
+    if ((seq = ASN1_STRING_new()) == NULL) {
+        return -32;
     }
-    attr = X509_ATTRIBUTE_create(NID_tcg_at_tcgCredentialType, V_ASN1_SEQUENCE, der);
+    seq->length = i2d_TCG_CRED_TYPE(credtype, &der);
+    if (seq->length <= 0) {
+        return -4;
+    }
+    seq->data = der;
+    attr = X509_ATTRIBUTE_create(NID_tcg_at_tcgCredentialType, V_ASN1_SEQUENCE, seq);
     if (attr == NULL) {
         return -2;
     }
-    pattr = &attr;
+    (*pattr) = attr;
     return 0;
 }
 
@@ -76,7 +90,7 @@ int create_platform_manufacturer_string (X509_ATTRIBUTE **pattr) {
     if (attr == NULL) {
         return -2;
     }
-    pattr = &attr;
+    (*pattr) = attr;
     return 0;
 }
 
@@ -89,7 +103,7 @@ int create_platform_model (X509_ATTRIBUTE **pattr) {
     if (attr == NULL) {
         return -2;
     }
-    pattr = &attr;
+    (*pattr) = attr;
     return 0;
 }
 
@@ -102,7 +116,7 @@ int create_platform_version (X509_ATTRIBUTE **pattr) {
     if (attr == NULL) {
         return -2;
     }
-    pattr = &attr;
+    (*pattr) = attr;
     return 0;
 }
 
@@ -115,32 +129,39 @@ int create_platform_serial (X509_ATTRIBUTE **pattr) {
     if (attr == NULL) {
         return -2;
     }
-    pattr = &attr;
+    (*pattr) = attr;
     return 0;
 }
 
 int create_manufacturer_id (X509_ATTRIBUTE **pattr) {
     X509_ATTRIBUTE *attr;
     unsigned char *der = NULL;
+    ASN1_STRING *seq = NULL;
 
     MANUFACTURER_ID *mid = MANUFACTURER_ID_new();
     /* Your organization might not have an NID assigned within the OpenSSL
     codebase, in which case, you'll have to construct an object identifier. */
     mid->manufacturerIdentifier = OBJ_nid2obj(NID_tcg);
-    if (i2d_MANUFACTURER_ID(mid, &der) <= 0) {
-        return -1;
+    if ((seq = ASN1_STRING_new()) == NULL) {
+        return -32;
     }
-    attr = X509_ATTRIBUTE_create(NID_tcg_at_platformManufacturerId, V_ASN1_SEQUENCE, der);
+    seq->length = i2d_MANUFACTURER_ID(mid, &der);
+    if (seq->length <= 0) {
+        return -4;
+    }
+    seq->data = der;
+    attr = X509_ATTRIBUTE_create(NID_tcg_at_platformManufacturerId, V_ASN1_SEQUENCE, seq);
     if (attr == NULL) {
         return -2;
     }
-    pattr = &attr;
+    (*pattr) = attr;
     return 0;
 }
 
 int create_platform_config_uri (X509_ATTRIBUTE **pattr) {
     X509_ATTRIBUTE *attr;
     unsigned char *der = NULL;
+    ASN1_STRING *seq = NULL;
     char hash_bytes[32];
 
     const unsigned char *uri = "https://wildboarsoftware.com";
@@ -157,20 +178,27 @@ int create_platform_config_uri (X509_ATTRIBUTE **pattr) {
     if (!X509_ALGOR_set0(ref->hashAlgorithm, OBJ_nid2obj(NID_sha256), V_ASN1_UNDEF, NULL))
         return -2;
     ref->hashValue = hash;
-    if (i2d_URI_REFERENCE(ref, &der) <= 0) {
-        return -3;
+
+    if ((seq = ASN1_STRING_new()) == NULL) {
+        return -32;
     }
-    attr = X509_ATTRIBUTE_create(NID_tcg_at_platformManufacturerId, V_ASN1_SEQUENCE, der);
+    seq->length = i2d_URI_REFERENCE(ref, &der);
+    if (seq->length <= 0) {
+        return -4;
+    }
+    seq->data = der;
+    attr = X509_ATTRIBUTE_create(NID_tcg_at_platformManufacturerId, V_ASN1_SEQUENCE, seq);
     if (attr == NULL) {
         return -4;
     }
-    pattr = &attr;
+    (*pattr) = attr;
     return 0;
 }
 
 int create_tbb_sec_assertions (X509_ATTRIBUTE **pattr) {
     X509_ATTRIBUTE *attr;
     unsigned char *der = NULL;
+    ASN1_STRING *seq = NULL;
 
     COMMON_CRITERIA_MEASURES *ccm = COMMON_CRITERIA_MEASURES_new();
     FIPS_LEVEL *fips = FIPS_LEVEL_new();
@@ -240,20 +268,26 @@ int create_tbb_sec_assertions (X509_ATTRIBUTE **pattr) {
     tbb->rtmType = mrt;
     tbb->iso9000Certified = 1;
     tbb->iso9000Uri = iso_uri;
-    if (i2d_TBB_SECURITY_ASSERTIONS(tbb, &der) <= 0) {
-        return -3;
+    if ((seq = ASN1_STRING_new()) == NULL) {
+        return -32;
     }
-    attr = X509_ATTRIBUTE_create(NID_tcg_at_tbbSecurityAssertions, V_ASN1_SEQUENCE, der);
+    seq->length = i2d_TBB_SECURITY_ASSERTIONS(tbb, &der);
+    if (seq->length <= 0) {
+        return -4;
+    }
+    seq->data = der;
+    attr = X509_ATTRIBUTE_create(NID_tcg_at_tbbSecurityAssertions, V_ASN1_SEQUENCE, seq);
     if (attr == NULL) {
         return -4;
     }
-    pattr = &attr;
+    (*pattr) = attr;
     return 0;
 }
 
 int create_platform_config (X509_ATTRIBUTE **pattr) {
     X509_ATTRIBUTE *attr;
     unsigned char *der = NULL;
+    ASN1_STRING *seq = NULL;
 
     STACK_OF(COMPONENT_IDENTIFIER) *componentIdentifiers = sk_COMPONENT_IDENTIFIER_new(NULL);
     STACK_OF(PLATFORM_PROPERTY) *platformProperties = sk_PLATFORM_PROPERTY_new(NULL);
@@ -406,14 +440,20 @@ int create_platform_config (X509_ATTRIBUTE **pattr) {
     config->componentIdentifiersUri = componentIdentifiersUri;
     config->platformProperties = platformProperties;
     config->platformPropertiesUri = platformPropertiesUri;
-    if (i2d_PLATFORM_CONFIG(config, &der) <= 0) {
-        return -1;
+
+    if ((seq = ASN1_STRING_new()) == NULL) {
+        return -32;
     }
-    attr = X509_ATTRIBUTE_create(NID_tcg_at_platformConfiguration_v2, V_ASN1_SEQUENCE, der);
+    seq->length = i2d_PLATFORM_CONFIG(config, &der);
+    if (seq->length <= 0) {
+        return -4;
+    }
+    seq->data = der;
+    attr = X509_ATTRIBUTE_create(NID_tcg_at_platformConfiguration_v2, V_ASN1_SEQUENCE, seq);
     if (attr == NULL) {
         return -2;
     }
-    pattr = &attr;
+    (*pattr) = attr;
     return 0;
 }
 
@@ -446,12 +486,12 @@ int add_tcg_attributes (STACK_OF(X509_ATTRIBUTE) *attributes, BIO *outbio) {
     return 0;
 }
 
-// Compile with gcc -o pccreate examples/plat_cert_create.c -L./ -lcrypto -lssl -Iinclude
-/* TODO:
+// Compile with gcc -g3 -o pccreate examples/plat_cert_create.c -L./ -lssl -lcrypto -Iinclude
+/*
 
-CA Cert
-- EE Cert
-- Attribute Cert pointing to EE cert as holder
+NOTE: ./cert-file.pem, ./key.pem, and ./acert.der MUST exist before you run this
+function. It does not create these files or ensure that they are present
+before attempting to use them.
 
 */
 int main () {
@@ -573,9 +613,9 @@ int main () {
     ASN1_BIT_STRING *issuerUID = NULL;
     X509_EXTENSIONS *extensions = sk_X509_EXTENSION_new(NULL);
 
-    // if (add_tcg_attributes(attributes, outbio) != 0) {
-    //     return 9;
-    // }
+    if (add_tcg_attributes(attributes, outbio) != 0) {
+        return 9;
+    }
 
     X509_ACERT_INFO *acinfo = X509_ACERT_INFO_new();
     acinfo->version = *ASN1_INTEGER_new(); // TODO: How do you make this NULL?
