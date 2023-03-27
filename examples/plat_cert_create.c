@@ -493,6 +493,8 @@ NOTE: ./cert-file.pem, ./key.pem, and ./acert.der MUST exist before you run this
 function. It does not create these files or ensure that they are present
 before attempting to use them.
 
+Partially based off of the example here: https://www.openssl.org/docs/manmaster/man3/ASN1_item_verify_ctx.html
+
 */
 int main () {
     const char cert_filestr[] = "./cert-file.pem";
@@ -677,10 +679,11 @@ int main () {
         return 201;
     }
     /* Verify the loaded object */
-    ret = ASN1_item_verify_ctx(ASN1_ITEM_rptr(X509_ACERT_INFO),
-                               &loaded_acert->sig_alg,
-                               &loaded_acert->signature,
-                               loaded_acert->acinfo, verify_ctx);
+    // ret = ASN1_item_verify_ctx(ASN1_ITEM_rptr(X509_ACERT_INFO),
+    //                            &loaded_acert->sig_alg,
+    //                            &loaded_acert->signature,
+    //                            loaded_acert->acinfo, verify_ctx);
+    ret = X509_ACERT_verify(loaded_acert, pkey);
 
     if (ret == 1) {
         BIO_puts(outbio, "Signature on attribute certificate is valid.\n");

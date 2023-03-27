@@ -43,6 +43,9 @@ int i2d_X509_ACERT_bio(BIO *bp, const X509_ACERT *acert);
 
 int X509_ACERT_sign(X509_ACERT *x, EVP_PKEY *pkey, const EVP_MD *md);
 int X509_ACERT_sign_ctx(X509_ACERT *x, EVP_MD_CTX *ctx);
+int X509_ACERT_verify_ex(X509_ACERT *a, EVP_PKEY *r, OSSL_LIB_CTX *libctx,
+                       const char *propq);
+int X509_ACERT_verify(X509_ACERT *a, EVP_PKEY *r);
 
 # define X509_ACERT_VERSION_2 1
 

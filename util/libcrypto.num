@@ -5785,3 +5785,5 @@ X509_ACERT_ISSUER_it                    ?	3_2_0	EXIST::FUNCTION:
 d2i_X509_HOLDER                         ?	3_2_0	EXIST::FUNCTION:
 i2d_X509_HOLDER                         ?	3_2_0	EXIST::FUNCTION:
 X509_HOLDER_it                          ?	3_2_0	EXIST::FUNCTION:
+X509_ACERT_verify_ex                    ?	3_2_0	EXIST::FUNCTION:
+X509_ACERT_verify                       ?	3_2_0	EXIST::FUNCTION:

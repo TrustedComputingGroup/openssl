@@ -182,6 +182,19 @@ int X509_ACERT_sign_ctx(X509_ACERT *x, EVP_MD_CTX *ctx)
                               x->acinfo, ctx);
 }
 
+int X509_ACERT_verify_ex(X509_ACERT *a, EVP_PKEY *r, OSSL_LIB_CTX *libctx,
+                       const char *propq)
+{
+    return ASN1_item_verify_ex(ASN1_ITEM_rptr(X509_ACERT_INFO), &a->sig_alg,
+                               &a->signature, a->acinfo, NULL,
+                               r, libctx, propq);
+}
+
+int X509_ACERT_verify(X509_ACERT *a, EVP_PKEY *r)
+{
+    return X509_ACERT_verify_ex(a, r, NULL, NULL);
+}
+
 int NETSCAPE_SPKI_sign(NETSCAPE_SPKI *x, EVP_PKEY *pkey, const EVP_MD *md)
 {
     return
