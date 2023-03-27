@@ -507,6 +507,9 @@ int main () {
     X509_NAME *certsubject;
     X509_STORE *store;
     X509_STORE_CTX *ctx;
+    EVP_MD_CTX *signing_ctx;
+    EVP_MD_CTX *verify_ctx;
+    X509_ACERT *loaded_acert;
     int ret;
 
     OpenSSL_add_all_algorithms();
@@ -635,15 +638,14 @@ int main () {
     acert->acinfo = acinfo;
     // Leave the other fields null for the sign function to fill in.
 
-    EVP_MD_CTX *mdctx = NULL;
-    if(!(mdctx = EVP_MD_CTX_create())) {
+    if(!(signing_ctx = EVP_MD_CTX_create())) {
         return 100;
     }
     
-    if (EVP_DigestSignInit(mdctx, NULL, EVP_sha256(), NULL, pkey) != 1) {
+    if (EVP_DigestSignInit(signing_ctx, NULL, EVP_sha256(), NULL, pkey) != 1) {
         return 101;
     }
-    ret = X509_ACERT_sign_ctx(acert, mdctx);
+    ret = X509_ACERT_sign_ctx(acert, signing_ctx);
     if (ret <= 0) {
         ERR_print_errors(outbio);
         return ret;
@@ -662,11 +664,35 @@ int main () {
     if (BIO_write(acertbio, der, acert_len) <= 0) {
         return 104;
     }
-    EVP_MD_CTX_destroy(mdctx);
+
+    verify_ctx = EVP_MD_CTX_new();
+    if (verify_ctx == NULL || !EVP_DigestVerifyInit_ex(verify_ctx, NULL, "SHA256", NULL, NULL, pkey, NULL)) {
+        return 200;
+    }
+
+    const unsigned char *der2 = der;
+    /* Load the der data back into an object */
+    loaded_acert = d2i_X509_ACERT(NULL, &der2, acert_len);
+    if (loaded_acert == NULL) {
+        return 201;
+    }
+    /* Verify the loaded object */
+    ret = ASN1_item_verify_ctx(ASN1_ITEM_rptr(X509_ACERT_INFO),
+                               &loaded_acert->sig_alg,
+                               &loaded_acert->signature,
+                               loaded_acert->acinfo, verify_ctx);
+
+    if (ret == 1) {
+        BIO_puts(outbio, "Signature on attribute certificate is valid.\n");
+    } else {
+        BIO_puts(outbio, "Signature on attribute certificate is invalid.\n");
+    }
+
+    EVP_MD_CTX_destroy(signing_ctx);
     X509_STORE_CTX_free(ctx);
     X509_STORE_free(store);
     X509_free(cert);
     BIO_free_all(certbio);
     BIO_free_all(outbio);
-    return 0;
+    return ret;
 }
