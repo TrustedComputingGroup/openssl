@@ -24,7 +24,7 @@
 #include "internal/dane.h"
 #include "crypto/x509.h"
 #include "x509_local.h"
-#include "x509_acert.h"
+#include "crypto/x509_acert.h"
 
 /*-
  * Check attribute certificate validity times.
@@ -80,7 +80,6 @@ int X509_attr_cert_verify(X509_STORE_CTX *ctx, X509_ACERT *acert)
     int pki_depth;
     EVP_PKEY *pkey;
     X509 *subj_pkc;
-
 
     if (X509_ALGOR_cmp(&acert->sig_alg, &acert->signature) != 0)
         return 0;

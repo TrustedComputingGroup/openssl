@@ -43,9 +43,6 @@ int i2d_X509_ACERT_bio(BIO *bp, const X509_ACERT *acert);
 
 int X509_ACERT_sign(X509_ACERT *x, EVP_PKEY *pkey, const EVP_MD *md);
 int X509_ACERT_sign_ctx(X509_ACERT *x, EVP_MD_CTX *ctx);
-int X509_ACERT_verify_ex(X509_ACERT *a, EVP_PKEY *r, OSSL_LIB_CTX *libctx,
-                       const char *propq);
-int X509_ACERT_verify(X509_ACERT *a, EVP_PKEY *r);
 
 # define X509_ACERT_VERSION_2 1
 
@@ -161,5 +158,16 @@ int OSSL_IETF_ATTR_SYNTAX_get_value_num(const OSSL_IETF_ATTR_SYNTAX *a);
 void *OSSL_IETF_ATTR_SYNTAX_get0_value(const OSSL_IETF_ATTR_SYNTAX *a, int ind, int *type);
 int OSSL_IETF_ATTR_SYNTAX_add1_value(OSSL_IETF_ATTR_SYNTAX *a, int type, void *data);
 int OSSL_IETF_ATTR_SYNTAX_print(BIO *bp, OSSL_IETF_ATTR_SYNTAX *a, int indent);
+
+int X509V3_EXT_ACERT_add_nconf(CONF *conf, X509V3_CTX *ctx, const char *section,
+                               X509_ACERT *acert);
+int X509V3_EXT_ACERT_add_conf(LHASH_OF(CONF_VALUE) *conf, X509V3_CTX *ctx,
+                              const char *section, X509_ACERT *acert);
+
+int ossl_x509_check_acert_time(X509_STORE_CTX *ctx, X509_ACERT *acert);
+int ossl_x509_check_acert_exts(X509_ACERT *acert);
+int X509_attr_cert_verify(X509_STORE_CTX *ctx, X509_ACERT *acert);
+int X509_ACERT_verify_ex(X509_ACERT *a, EVP_PKEY *r, OSSL_LIB_CTX *libctx, const char *propq);
+int X509_ACERT_verify(X509_ACERT *a, EVP_PKEY *r);
 
 #endif

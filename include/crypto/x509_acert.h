@@ -63,4 +63,9 @@ typedef struct X509_acert_st {
     CRYPTO_REF_COUNT references;
     CRYPTO_RWLOCK *lock;
 } X509_ACERT;
+
+int ossl_x509_check_acert_time(X509_STORE_CTX *ctx, X509_ACERT *acert);
+int ossl_x509_check_acert_exts(X509_ACERT *acert);
+int X509_attr_cert_verify(X509_STORE_CTX *ctx, X509_ACERT *acert);
+
 #endif

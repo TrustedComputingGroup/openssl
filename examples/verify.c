@@ -504,6 +504,7 @@ int main () {
     BIO *keybio;
     BIO *outbio;
     BIO *acertbio;
+    BIO *acert_in;
     X509 *error_cert;
     X509 *cert;
     X509_NAME *certsubject;
@@ -519,6 +520,7 @@ int main () {
     keybio = BIO_new(BIO_s_file());
     outbio = BIO_new_fp(stdout, BIO_NOCLOSE);
     acertbio = BIO_new(BIO_s_file());
+    acert_in = BIO_new(BIO_s_file());
 
     if ((store = X509_STORE_new()) == NULL) {
         BIO_printf(outbio, "Error creating X509_STORE object\n");
@@ -653,12 +655,21 @@ int main () {
         return ret;
     }
 
+    ret = BIO_read_filename(acert_in, outfile_name);
+    if (!(cert = PEM_read_bio_X509(acert, NULL, 0, NULL))) {
+        BIO_printf(outbio, "Error loading attribute cert into memory\n");
+        return 3;
+    }
+
+    char *
+    BIO_read(acert_in)
+
     unsigned char *der = NULL;
     int acert_len = i2d_X509_ACERT(acert, &der);
     if (acert_len <= 0) {
         return 103;
     }
-    ret = BIO_write_filename(acertbio, outfile_name);
+    ret = BIO_read_filename(acertbio, outfile_name);
     if (ret != 1) {
         BIO_printf(outbio, "Error writing result to file\n");
         return 105;
