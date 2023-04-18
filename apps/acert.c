@@ -332,12 +332,7 @@ int acert_main(int argc, char **argv)
     opt_set_unknown_name("digest");
     prog = opt_init(argc, argv, acert_options);
 
-    int i = 0;
     while ((o = opt_next()) != OPT_EOF) {
-        i++;
-        if (i > 1000) {
-            break;
-        }
         switch (o) {
         case OPT_EOF:
         case OPT_ERR:
