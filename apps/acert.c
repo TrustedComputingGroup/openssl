@@ -189,7 +189,7 @@ static int X509_ACERT_verify_cert (X509_ACERT *acert, X509 *holder, X509 *issuer
 
     int holder_verified = 0;
 
-    if (ossl_x509_check_acert_exts(acert) == 0)
+    if (ossl_x509_check_acert_exts(acert) != X509_V_OK)
         goto out;
 
     /*
@@ -234,9 +234,10 @@ static int X509_ACERT_verify_cert (X509_ACERT *acert, X509 *holder, X509 *issuer
         }
     }
 
-    if (holder_verified == 0)
-        /* TODO: New error code to indicate that holder doesn't match */
+    if (holder_verified == 0) {
+        ERR_raise(ERR_LIB_X509, X509_V_ERR_SUBJECT_ISSUER_MISMATCH);
         goto out;
+    }
 
     /*
      * Check that issuer cert matches attribute cert issuer field,
@@ -275,14 +276,17 @@ static int X509_ACERT_verify_cert (X509_ACERT *acert, X509 *holder, X509 *issuer
     /*
      * extensions have been cached by X509_get_key_usage(), so X509_check_ca()
      * can't fail and will only return 0 if `issuer` is not a CA.
+     * 
+     * It does not seem to be specified in ITU Recommendation X.509, but IETF
+     * RFC 5755 states in Section 4.5 that an AC issuer MUST NOT be a PKC
+     * issuer.
+     * 
+     * In my opinion, however, validation should simply be ambivalent.
      */
-    if (X509_check_ca(issuer) != 0) {
-        /*
-         * TODO: New error code to indicate that issuer is a CA when it
-         * shouldn't be
-         */
-        goto out;
-    }
+    // if (X509_check_ca(issuer) != 0) {
+    //     ERR_raise(ERR_LIB_X509, X509_V_ERR_INVALID_NON_CA);
+    //     goto out;
+    // }
 
     if (X509_cmp_time(X509_ACERT_get0_notBefore(acert), NULL) > 0) {
         ERR_raise(ERR_LIB_X509, X509_V_ERR_CERT_NOT_YET_VALID);
@@ -680,7 +684,8 @@ int acert_main(int argc, char **argv)
 
     if (verify) {
         if (X509_ACERT_verify_cert(acert, holder, AAcert) <= 0) {
-            BIO_printf(bio_err, "Attribute certificate verify failure\n");
+            ERR_print_errors(bio_err);
+            BIO_printf(bio_err, "Attribute certificate verification failed.\n");
             goto end;
         }
     }
