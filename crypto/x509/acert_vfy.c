@@ -107,3 +107,44 @@ int X509_attr_cert_verify(X509_STORE_CTX *ctx, X509_ACERT *acert)
 
     return X509_V_OK;
 }
+
+/*-
+ * Inform the verify callback of an error, CRL-specific variant.  Here, the
+ * error depth and certificate are already set, we just specify the error
+ * number.
+ *
+ * Returns 0 to abort verification with an error, non-zero to continue.
+ */
+static int verify_cb_crl(X509_STORE_CTX *ctx, int err)
+{
+    ctx->error = err;
+    return ctx->verify_cb(0, ctx);
+}
+
+int acert_crl(X509_STORE_CTX *ctx, X509_CRL *crl, X509_ACERT *x)
+{
+    X509_REVOKED *rev;
+
+    /*
+     * The rules changed for this... previously if a CRL contained unhandled
+     * critical extensions it could still be used to indicate a certificate
+     * was revoked. This has since been changed since critical extensions can
+     * change the meaning of CRL entries.
+     */
+    if ((ctx->param->flags & X509_V_FLAG_IGNORE_CRITICAL) == 0
+        && (crl->flags & EXFLAG_CRITICAL) != 0 &&
+        !verify_cb_crl(ctx, X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION))
+        return 0;
+    /*
+     * Look for serial number of certificate in CRL.  If found, make sure
+     * reason is not removeFromCRL.
+     */
+    if (X509_CRL_get0_by_serial(crl, &rev, &x->acinfo->serialNumber)) {
+        if (rev->reason == CRL_REASON_REMOVE_FROM_CRL)
+            return 2;
+        if (!verify_cb_crl(ctx, X509_V_ERR_CERT_REVOKED))
+            return 0;
+    }
+
+    return 1;
+}

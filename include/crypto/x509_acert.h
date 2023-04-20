@@ -67,5 +67,6 @@ typedef struct X509_acert_st {
 int ossl_x509_check_acert_time(X509_STORE_CTX *ctx, X509_ACERT *acert);
 int ossl_x509_check_acert_exts(X509_ACERT *acert);
 int X509_attr_cert_verify(X509_STORE_CTX *ctx, X509_ACERT *acert);
+int acert_crl(X509_STORE_CTX *ctx, X509_CRL *crl, X509_ACERT *x);
 
 #endif
