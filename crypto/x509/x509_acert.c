@@ -13,7 +13,7 @@
 #include <openssl/asn1t.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
-#include "x509_acert.h"
+#include <crypto/x509_acert.h>
 
 /*
  * OpenSSL ASN.1 template translation of RFC 5755 4.1.
@@ -68,10 +68,13 @@ ASN1_SEQUENCE(X509_ACERT) = {
 } ASN1_SEQUENCE_END(X509_ACERT)
 
 IMPLEMENT_ASN1_FUNCTIONS(X509_ACERT)
+IMPLEMENT_ASN1_DUP_FUNCTION(X509_ACERT)
 IMPLEMENT_ASN1_FUNCTIONS(X509_ACERT_INFO)
 IMPLEMENT_ASN1_FUNCTIONS(OSSL_ISSUER_SERIAL)
 IMPLEMENT_ASN1_FUNCTIONS(OSSL_OBJECT_DIGEST_INFO)
 IMPLEMENT_ASN1_FUNCTIONS(X509_ACERT_ISSUER_V2FORM)
+IMPLEMENT_ASN1_FUNCTIONS(X509_ACERT_ISSUER)
+IMPLEMENT_ASN1_FUNCTIONS(X509_HOLDER)
 
 static X509_NAME *get_dirName(const GENERAL_NAMES *names)
 {
@@ -306,4 +309,50 @@ int X509_ACERT_add_attr_nconf(CONF *conf, const char *section,
     ret = 1;
 err:
     return ret;
+}
+
+int X509_acert_get_ext_count(const X509_ACERT *x)
+{
+    return X509v3_get_ext_count(x->acinfo->extensions);
+}
+
+int X509_acert_get_ext_by_NID(const X509_ACERT *x, int nid, int lastpos)
+{
+    return X509v3_get_ext_by_NID(x->acinfo->extensions, nid, lastpos);
+}
+
+int X509_acert_get_ext_by_OBJ(const X509_ACERT *x, const ASN1_OBJECT *obj, int lastpos)
+{
+    return X509v3_get_ext_by_OBJ(x->acinfo->extensions, obj, lastpos);
+}
+
+int X509_acert_get_ext_by_critical(const X509_ACERT *x, int crit, int lastpos)
+{
+    return X509v3_get_ext_by_critical(x->acinfo->extensions, crit, lastpos);
+}
+
+X509_EXTENSION *X509_acert_get_ext(const X509_ACERT *x, int loc)
+{
+    return X509v3_get_ext(x->acinfo->extensions, loc);
+}
+
+X509_EXTENSION *X509_acert_delete_ext(X509_ACERT *x, int loc)
+{
+    return X509v3_delete_ext(x->acinfo->extensions, loc);
+}
+
+int X509_acert_add_ext(X509_ACERT *x, X509_EXTENSION *ex, int loc)
+{
+    return (X509v3_add_ext(&(x->acinfo->extensions), ex, loc) != NULL);
+}
+
+void *X509_acert_get_ext_d2i(const X509_ACERT *x, int nid, int *crit, int *idx)
+{
+    return X509V3_get_d2i(x->acinfo->extensions, nid, crit, idx);
+}
+
+int X509_acert_add1_ext_i2d(X509_ACERT *x, int nid, void *value, int crit,
+                            unsigned long flags)
+{
+    return X509V3_add1_i2d(&x->acinfo->extensions, nid, value, crit, flags);
 }

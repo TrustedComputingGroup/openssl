@@ -10,7 +10,8 @@
 #include <openssl/err.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
-#include "x509_acert.h"
+#include <crypto/x509_acert.h>
+#include <openssl/x509_acert.h>
 
 static int replace_gentime(ASN1_STRING **dest, ASN1_GENERALIZEDTIME *src)
 {
@@ -147,7 +148,7 @@ int X509_ACERT_set1_issuerName(X509_ACERT *x, const X509_NAME *name)
         x->acinfo->issuer.type = X509_ACERT_ISSUER_V2;
     }
 
-    return replace_dirName(&v2Form->issuerName, name);
+    return replace_dirName(&(v2Form->issuerName), name);
 
 oom:
     ERR_raise(ERR_LIB_X509, ERR_R_MALLOC_FAILURE);

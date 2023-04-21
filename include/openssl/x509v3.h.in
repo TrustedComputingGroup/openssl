@@ -1449,6 +1449,8 @@ typedef struct TCG_SPEC_VERSION_st {
     ASN1_INTEGER *revision;
 } TCG_SPEC_VERSION;
 
+DECLARE_ASN1_ALLOC_FUNCTIONS(TCG_SPEC_VERSION)
+
 typedef struct TCG_PLATFORM_SPEC_st {
     TCG_SPEC_VERSION *version;
     ASN1_OCTET_STRING *platformClass;
@@ -1466,6 +1468,8 @@ typedef struct COMPONENT_CLASS_st {
     ASN1_OBJECT *componentClassRegistry;
     ASN1_OCTET_STRING *componentClassValue;
 } COMPONENT_CLASS;
+
+DECLARE_ASN1_ALLOC_FUNCTIONS(COMPONENT_CLASS)
 
 typedef struct COMPONENT_ADDRESS_st {
     ASN1_OBJECT *addressType;
