@@ -137,35 +137,18 @@ int X509_ACERT_set1_issuerName(X509_ACERT *x, const X509_NAME *name)
 {
     X509_ACERT_ISSUER_V2FORM *v2Form;
 
-    // v2Form = x->acinfo->issuer.u.v2Form;
-
-    // X509_ACERT_ISSUER_V2FORM *v2_issuer = X509_ACERT_ISSUER_V2FORM_new();
-    // v2_issuer->baseCertificateId = holder_base_cert_id;
-    // v2_issuer->issuerName = NULL;
-    // v2_issuer->objectDigestInfo = NULL;
-
-    X509_ACERT_ISSUER_V2FORM *v2_issuer = X509_ACERT_ISSUER_V2FORM_new();
-    v2_issuer->baseCertificateId = NULL;
-    v2_issuer->issuerName = NULL;
-    v2_issuer->objectDigestInfo = NULL;
+    v2Form = x->acinfo->issuer.u.v2Form;
 
     /* only v2Form is supported, so always create that version */
-    // if (v2Form == NULL) {
-        // v2Form = X509_ACERT_ISSUER_V2FORM_new();
-        // if (v2Form == NULL)
-        //     goto oom;
-        x->acinfo->issuer.u.v2Form = v2_issuer;
+    if (v2Form == NULL) {
+        v2Form = X509_ACERT_ISSUER_V2FORM_new();
+        if (v2Form == NULL)
+            goto oom;
+        x->acinfo->issuer.u.v2Form = v2Form;
         x->acinfo->issuer.type = X509_ACERT_ISSUER_V2;
-    // }
+    }
 
-    // v2Form->issuerName = sk_GENERAL_NAME_new(NULL);
-
-    // if (v2Form->issuerName == NULL) {
-    //     ERR_raise(ERR_LIB_X509, ERR_R_MALLOC_FAILURE);
-    //     return 0;
-    // }
-
-    return replace_dirName(&(v2_issuer->issuerName), name);
+    return replace_dirName(&(v2Form->issuerName), name);
 
 oom:
     ERR_raise(ERR_LIB_X509, ERR_R_MALLOC_FAILURE);
