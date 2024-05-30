@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.in": "c",
+        "types.h": "c"
+    }
+}
